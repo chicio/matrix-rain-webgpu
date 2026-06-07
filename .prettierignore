@@ -1,0 +1,11 @@
+# oxfmt reads this file by default for ignores.
+# Markdown is hand-written prose (specs, plans, references); don't reflow it.
+*.md
+
+# Project-local agent skill bundle — vendored as-is, don't reformat.
+.agents/
+
+# Lockfiles
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

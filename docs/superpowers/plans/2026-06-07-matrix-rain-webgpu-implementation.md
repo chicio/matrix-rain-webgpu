@@ -69,15 +69,11 @@ src/
 - Modify: `src/main.tsx`
 - Delete: `src/App.tsx`
 
-- [ ] **Step 1:** `git mv src/App.tsx src/demo/App.tsx`
-- [ ] **Step 2:** In `src/main.tsx` update the import path from `./App.tsx` to `./demo/App.tsx`.
-- [ ] **Step 3:** Run `pnpm dev` (or `npm run dev`) → verify the typegpu splash still renders. Verification is **visual** in the browser.
-- [ ] **Step 4:** Run `pnpm run types && pnpm run check` → no errors.
-- [ ] **Step 5:** Commit:
-  ```
-  git add -A
-  git commit -m "chore: move scaffold gradient into src/demo/"
-  ```
+- [x] **Step 1:** `git mv src/App.tsx src/demo/App.tsx`
+- [x] **Step 2:** In `src/main.tsx` update the import path from `./App.tsx` to `./demo/App.tsx`. *(also dropped the now-unused `React` import — tsconfig uses automatic JSX runtime)*
+- [ ] **Step 3:** Run `pnpm dev` (or `npm run dev`) → verify the typegpu splash still renders. Verification is **visual** in the browser. *(user to confirm out-of-band when convenient)*
+- [x] **Step 4:** Run `pnpm run types && pnpm run check` → no errors. *(types pass; format check has 13 pre-existing issues in .md/json files, unrelated to this change — to be addressed in Task 0.3 or 0.4)*
+- [x] **Step 5:** Commit: `d617259 chore: move scaffold gradient into src/demo/`
 
 ### Task 0.3: Create empty `src/lib/` skeleton with placeholders
 

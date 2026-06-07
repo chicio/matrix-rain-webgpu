@@ -12,14 +12,14 @@
     "types": "tsc -b"
   },
   "dependencies": {
-    "@typegpu/react": "^0.11.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "typegpu": "^0.11.6",
     "@typegpu/color": "^0.11.0",
     "@typegpu/noise": "^0.11.0",
     "@typegpu/radiance-cascades": "^0.11.0",
-    "@typegpu/sdf": "^0.11.0"
+    "@typegpu/react": "^0.11.0",
+    "@typegpu/sdf": "^0.11.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "typegpu": "^0.11.6"
   },
   "devDependencies": {
     "@types/node": "^24.12.3",

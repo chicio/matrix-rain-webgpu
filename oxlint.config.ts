@@ -14,6 +14,8 @@ export default defineConfig({
     'typescript/no-explicit-any': 'error',
     'typescript/no-unsafe-type-assertion': 'off',
     'import/no-named-as-default': 'off',
+    // React 17+ automatic JSX runtime — no need for React in scope.
+    'react/react-in-jsx-scope': 'off',
   },
   env: {
     builtin: true,
