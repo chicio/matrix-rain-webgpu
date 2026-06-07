@@ -57,14 +57,10 @@ src/
 
 **Files:** repo root.
 
-- [ ] **Step 1:** `cd /Users/fduroni/Code/Fabrizio/matrix-rain && git init -b main`
-- [ ] **Step 2:** Confirm `.gitignore` already covers `node_modules/`, `dist/`, build artifacts. Currently it does (look at line counts of existing `.gitignore`).
-- [ ] **Step 3:** First commit:
-  ```
-  git add -A
-  git commit -m "chore: scaffold from typegpu CLI + spec + plan"
-  ```
-- [ ] **Step 4:** Do **not** tag yet. M0 closes with a single `0.0.0` tag at the end of Task 0.4 once the demo shell is in place.
+- [x] **Step 1:** `cd /Users/fduroni/Code/Fabrizio/matrix-rain && git init -b main` *(done — user ran this; baseline `f0daf1f Init commit :tada:`)*
+- [x] **Step 2:** Confirm `.gitignore` already covers `node_modules/`, `dist/`, build artifacts. Currently it does (look at line counts of existing `.gitignore`). *(verified — covers logs, node_modules, dist, dist-ssr, \*.local, editor files)*
+- [x] **Step 3:** First commit *(done as two commits: `f0daf1f` for scaffold + initial spec, `0f18d46` for plan + spec revisions)*
+- [x] **Step 4:** Do **not** tag yet. M0 closes with a single `0.0.0` tag at the end of Task 0.4 once the demo shell is in place.
 
 ### Task 0.2: Move the scaffold gradient demo into `src/demo/`
 
