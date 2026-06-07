@@ -1,22 +1,26 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { common, d } from 'typegpu';
-import { useConfigureContext, useFrame, useRoot } from '@typegpu/react';
+import { common, d, std } from 'typegpu';
+import { useConfigureContext, useFrame, useRoot, useUniform } from '@typegpu/react';
 
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
 
 function App() {
   const root = useRoot();
+  const time = useUniform(d.f32);
+
   const renderPipeline = useMemo(
     () =>
       root.createRenderPipeline({
         vertex: common.fullScreenTriangle,
-        fragment: ({ uv }) => {
+        fragment: () => {
           'use gpu';
-          return d.vec4f(0.55, uv, 1);
+
+          const k = std.sin(time.$ * 2.0) * 0.5 + 0.5;
+          return d.vec4f(0, k, 0, 1);
         },
       }),
-    [root],
+    [root, time],
   );
 
   const { ref: configureRef, ctxRef } = useConfigureContext({
@@ -34,8 +38,11 @@ function App() {
 
   const [renderMode, setRenderMode] = useState<RenderMode>('state-debug');
 
-  useFrame(() => {
-    if (!ctxRef.current) return;
+  useFrame(({ elapsedSeconds }) => {
+    if (!ctxRef.current) {
+      return;
+    }
+    time.write(elapsedSeconds);
     renderPipeline.withColorAttachment({ view: ctxRef.current }).draw(3);
   });
 
