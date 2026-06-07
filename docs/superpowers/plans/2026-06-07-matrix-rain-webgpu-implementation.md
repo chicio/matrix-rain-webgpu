@@ -96,22 +96,21 @@ src/
 - Modify: `src/demo/App.tsx` (replace the typegpu splash with a layout that has: a sized canvas container, the debug panel, the observability widget, and the render-mode selector — all wired but mostly empty)
 - Modify: `src/demo/index.css` (or `src/index.css` — wherever the CSS lands)
 
-- [ ] **Step 1:** Build the layout shell. A side drawer (right or bottom — pick during execution) with three sections: **Effects**, **Render Mode**, **Observability**. The canvas occupies the rest of the viewport, full-bleed, in a parent div sized via CSS (so we can later add a drag-resize handle).
-- [ ] **Step 2:** `<DebugPanel />` initially shows the toggle/slider controls **disabled** with a "wired in milestone X" tag — they get enabled as their backing prop ships. This makes the panel's evolution visible across milestones.
-- [ ] **Step 3:** `<Observability />` shows FPS (compute now from `useFrame`'s elapsedSeconds delta — needs Milestone 1 first, so for now show "—"), canvas pixel size (read from a ResizeObserver), column count ("—" until M2), and a scrollable in-page console panel that captures `window.onerror` and unhandled rejections.
-- [ ] **Step 4:** `<RenderMode />` is a `<select>` (or segmented control) with entries `state-debug | glyphs-flat | glyphs-parallax | glyphs-bloom | glyphs-crt`. Selection is stored in React state and passed into the renderer; for now no renderer reads it.
-- [ ] **Step 5:** Verify the page loads, shows the layout, no console errors. The canvas is still showing the typegpu gradient from earlier.
-- [ ] **Step 6:** Commit:
-  ```
-  git commit -am "feat(demo): shell with debug panel, observability, render-mode selector"
-  ```
-- [ ] **Step 7:** Tag the milestone close: `git tag 0.0.0`
+- [x] **Step 1:** Build the layout shell. **Decision:** right rail, fixed 320px. CSS grid `1fr var(--rail-width)` on `#shell`; `#stage` holds the canvas full-bleed.
+- [x] **Step 2:** `<Effects />` (renamed from `<DebugPanel />`; see note below) shows disabled controls grouped into six fieldsets — Simulation (M2), Parallax (M5), Bloom (M6), CRT (M7), Interaction (M8), Lifecycle (M9). Each `<legend>` carries a `wired in M…` tag.
+- [x] **Step 3:** `<Observability />` shows FPS `—`, canvas drawing-buffer size via ResizeObserver (`{w}×{h} @ {dpr}x`), columns `—`, and a scrollable error console capturing `window` `error` + `unhandledrejection`.
+- [x] **Step 4:** `<RenderModeSelector />` is a native `<select>` with the five entries; selection lives in App state (`renderMode`), threaded through `<DebugPanel>` via `onRenderModeChange`. No renderer reads it yet.
+- [x] **Step 5:** Verified — page loads, layout renders, scaffold gradient still painted by typegpu, no console errors. (Visually confirmed 2026-06-07.)
+- [x] **Step 6:** Commit landed as two: `2d913b6 feat(demo): shell with debug panel, observability, render-mode selector` (initial scaffold) → `0a6fbec refactor(demo): split debug-panel into folder; add DebugPanel wrapper` (folder structure refactor).
+- [x] **Step 7:** Tag the milestone close: `git tag 0.0.0` *(applied after this docs commit lands)*.
+
+**Note on naming drift from the plan:** the plan called the disabled-controls component `<DebugPanel />`. As we built it, the rail ended up needing a single wrapper that owns `<aside id="rail">` and composes Effects + RenderMode + Observability — that wrapper got the `DebugPanel` name. The disabled-controls component is now `<Effects />` (under `src/demo/debug-panel/Effects.tsx`). All other rail primitives (Group/Slider/Toggle) live alongside it in `src/demo/debug-panel/`.
 
 **Chunk 0 verification:**
-- [ ] `pnpm dev` opens with the canvas showing the existing gradient, surrounded by the new shell.
-- [ ] Debug panel shows disabled controls labeled by their target milestone.
-- [ ] Observability widget shows canvas pixel size that updates if you resize the window.
-- [ ] No console errors.
+- [x] `pnpm dev` opens with the canvas showing the existing gradient, surrounded by the new shell.
+- [x] Debug panel shows disabled controls labeled by their target milestone.
+- [x] Observability widget shows canvas pixel size that updates if you resize the window.
+- [x] No console errors.
 
 ---
 
