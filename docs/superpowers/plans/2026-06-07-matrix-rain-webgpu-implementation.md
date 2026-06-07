@@ -83,16 +83,9 @@ src/
 - Create: `src/lib/feature-detect.ts` (with the real `isWebGPUSupported` — small and safe to land now)
 - Create: `src/lib/gpu/.gitkeep` (or `palette.ts` if a placeholder feels cleaner)
 
-- [ ] **Step 1:** Create `src/lib/feature-detect.ts`:
-  ```ts
-  export const isWebGPUSupported = (): boolean =>
-    typeof navigator !== "undefined" && "gpu" in navigator;
-  ```
-- [ ] **Step 2:** Touch the other placeholder files. Goal: directory layout matches the spec so future milestones drop files into known spots.
-- [ ] **Step 3:** Commit:
-  ```
-  git commit -am "chore: create src/lib/ skeleton + feature-detect"
-  ```
+- [x] **Step 1:** Create `src/lib/feature-detect.ts` with real `isWebGPUSupported()`.
+- [x] **Step 2:** ~~Touch the other placeholder files~~ — adjusted: oxlint's `unicorn/require-module-specifiers` rejects empty `export {}` files, so instead `src/lib/index.ts` now re-exports `isWebGPUSupported` (real content) and `src/lib/types.ts` is deferred to M9 when actual types exist. `src/lib/gpu/.gitkeep` reserves the gpu/ directory.
+- [x] **Step 3:** Commit: `3cb7f2f feat(lib): src/lib/ skeleton + isWebGPUSupported`
 
 ### Task 0.4: Demo shell with debug panel + observability + render-mode selector skeletons
 
