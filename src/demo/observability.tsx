@@ -1,0 +1,90 @@
+import { useEffect, useState } from 'react';
+import type { RefObject } from 'react';
+
+type Props = {
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+};
+
+type LogEntry = {
+  id: number;
+  kind: 'error' | 'rejection';
+  message: string;
+};
+
+const MAX_LOG_ENTRIES = 50;
+
+export function Observability({ canvasRef }: Props) {
+  const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+  const [dpr, setDpr] = useState(() =>
+    typeof window === 'undefined' ? 1 : window.devicePixelRatio,
+  );
+  const [errors, setErrors] = useState<LogEntry[]>([]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const read = () => {
+      setSize({ w: canvas.width, h: canvas.height });
+      setDpr(window.devicePixelRatio);
+    };
+
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(canvas);
+    return () => {
+      ro.disconnect();
+    };
+  }, [canvasRef]);
+
+  useEffect(() => {
+    let nextId = 0;
+    const push = (kind: LogEntry['kind'], message: string) => {
+      setErrors((prev) => [{ id: nextId++, kind, message }, ...prev].slice(0, MAX_LOG_ENTRIES));
+    };
+
+    const onError = (event: ErrorEvent) => {
+      push('error', event.message || String(event.error));
+    };
+    const onRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason as unknown;
+      push('rejection', reason instanceof Error ? reason.message : String(reason));
+    };
+
+    window.addEventListener('error', onError);
+    window.addEventListener('unhandledrejection', onRejection);
+    return () => {
+      window.removeEventListener('error', onError);
+      window.removeEventListener('unhandledrejection', onRejection);
+    };
+  }, []);
+
+  return (
+    <div className="rail-section">
+      <h3 className="rail-heading">Observability</h3>
+      <dl className="rail-stats">
+        <dt>FPS</dt>
+        <dd>—</dd>
+        <dt>size</dt>
+        <dd>
+          {size.w}×{size.h}
+          <span className="rail-stat-aux"> @ {dpr.toFixed(2)}x</span>
+        </dd>
+        <dt>columns</dt>
+        <dd>—</dd>
+      </dl>
+      <div className="rail-console">
+        {errors.length === 0 ? (
+          <p className="rail-console-empty">No errors.</p>
+        ) : (
+          errors.map((entry) => (
+            <p key={entry.id} className={`rail-console-line rail-console-${entry.kind}`}>
+              <span className="rail-console-kind">{entry.kind}</span>
+              <span className="rail-console-msg">{entry.message}</span>
+            </p>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
