@@ -15,15 +15,16 @@ const MAX_LOG_ENTRIES = 50;
 
 export function Observability({ canvasRef }: Props) {
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
-  const [dpr, setDpr] = useState(() =>
-    typeof window === 'undefined' ? 1 : window.devicePixelRatio,
-  );
+  const [dpr, setDpr] = useState(1);
   const [errors, setErrors] = useState<LogEntry[]>([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    // dpr is read here (not via a lazy useState init) so it tracks
+    // cross-monitor drag and browser zoom: both change devicePixelRatio,
+    // typegpu's autoResize then resizes the canvas, which re-fires this RO.
     const read = () => {
       setSize({ w: canvas.width, h: canvas.height });
       setDpr(window.devicePixelRatio);

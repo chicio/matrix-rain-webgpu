@@ -1,51 +1,6 @@
-import type { ReactNode } from 'react';
-
-type GroupProps = {
-  title: string;
-  milestone: string;
-  children: ReactNode;
-};
-
-function Group({ title, milestone, children }: GroupProps) {
-  return (
-    <fieldset className="rail-group" disabled>
-      <legend>
-        <span className="rail-group-title">{title}</span>
-        <span className="rail-group-tag">{milestone}</span>
-      </legend>
-      {children}
-    </fieldset>
-  );
-}
-
-type ToggleProps = { label: string };
-
-function Toggle({ label }: ToggleProps) {
-  return (
-    <label className="rail-row">
-      <input type="checkbox" disabled />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-type SliderProps = {
-  label: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-};
-
-function Slider({ label, min, max, step, value }: SliderProps) {
-  return (
-    <label className="rail-row">
-      <span>{label}</span>
-      <input type="range" min={min} max={max} step={step} value={value} disabled readOnly />
-      <span className="rail-value">{value}</span>
-    </label>
-  );
-}
+import { Group } from './Group';
+import { Slider } from './Slider';
+import { Toggle } from './Toggle';
 
 function Button({ label }: { label: string }) {
   return (
@@ -55,7 +10,7 @@ function Button({ label }: { label: string }) {
   );
 }
 
-export function DebugPanel() {
+export function Effects() {
   return (
     <div className="rail-section">
       <h3 className="rail-heading">Effects</h3>

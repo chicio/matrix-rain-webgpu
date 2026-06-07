@@ -2,9 +2,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { common, d } from 'typegpu';
 import { useConfigureContext, useFrame, useRoot } from '@typegpu/react';
 
-import { DebugPanel } from './debug-panel';
-import { Observability } from './observability';
-import { RenderModeSelector, type RenderMode } from './render-mode';
+import { DebugPanel } from './debug-panel/DebugPanel';
+import type { RenderMode } from './debug-panel/RenderMode';
 
 function App() {
   const root = useRoot();
@@ -45,14 +44,11 @@ function App() {
       <section id="stage">
         <canvas ref={setCanvas} />
       </section>
-      <aside id="rail">
-        <DebugPanel />
-        <div className="rail-section">
-          <h3 className="rail-heading">Render Mode</h3>
-          <RenderModeSelector value={renderMode} onChange={setRenderMode} />
-        </div>
-        <Observability canvasRef={canvasRef} />
-      </aside>
+      <DebugPanel
+        canvasRef={canvasRef}
+        renderMode={renderMode}
+        onRenderModeChange={setRenderMode}
+      />
     </div>
   );
 }
