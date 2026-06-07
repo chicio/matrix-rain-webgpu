@@ -124,24 +124,24 @@ src/
 
 ### Task 1.1: Hook up `useUniform(d.f32)` for `time` and use it in the fragment shader
 
-- [ ] **Step 1:** In `src/demo/App.tsx`, replace the scaffold's pipeline fragment with one that produces a time-driven color (e.g. a horizontal pulse moving across the canvas — picked together during pair coding). Use the `@typegpu/react` example pattern: `const time = useUniform(d.f32)`, `time.write(elapsedSeconds)` inside `useFrame`. Fragment reads `time.$`.
-- [ ] **Step 2:** Run `pnpm dev` → animation plays smoothly at display refresh.
-- [ ] **Step 3:** Verify console is clean (no validation errors from WebGPU).
-- [ ] **Step 4:** Commit: `feat(m1): time-driven full-screen pass with useUniform`
+- [x] **Step 1:** In `src/demo/App.tsx`, replace the scaffold's pipeline fragment with one that produces a time-driven color (e.g. a horizontal pulse moving across the canvas — picked together during pair coding). Use the `@typegpu/react` example pattern: `const time = useUniform(d.f32)`, `time.write(elapsedSeconds)` inside `useFrame`. Fragment reads `time.$`.
+- [x] **Step 2:** Run `pnpm dev` → animation plays smoothly at display refresh.
+- [x] **Step 3:** Verify console is clean (no validation errors from WebGPU).
+- [x] **Step 4:** Commit: `feat(m1): time-driven full-screen pass with useUniform`
 
 ### Task 1.2: Real FPS readout in the observability widget
 
-- [ ] **Step 1:** Inside the `useFrame` callback, compute a smoothed FPS (e.g. exponential moving average of `1/deltaSeconds`, `alpha=0.1`). Stash it in a ref to avoid re-render storms; flush to state every ~250ms.
-- [ ] **Step 2:** `<Observability />` renders the FPS from that state.
-- [ ] **Step 3:** Verify FPS reads ~60 (or display refresh) when the tab is focused, drops when you switch away.
-- [ ] **Step 4:** Commit: `feat(demo): real FPS readout`
+- [x] **Step 1:** Inside the `useFrame` callback, compute a smoothed FPS (e.g. exponential moving average of `1/deltaSeconds`, `alpha=0.1`). Stash it in a ref to avoid re-render storms; flush to state every ~250ms. _(Bumped flush to 1.0 s for steadier readout + correct first-reading after EMA settles.)_
+- [x] **Step 2:** `<Observability />` renders the FPS from that state.
+- [x] **Step 3:** Verify FPS reads ~60 (or display refresh) when the tab is focused, drops when you switch away.
+- [x] **Step 4:** Commit: `feat(demo): real FPS readout`
 
 **Chunk 1 verification:**
-- [ ] Canvas shows a time-driven animation, not a static gradient.
-- [ ] FPS readout in the observability widget updates and looks plausible.
-- [ ] No console errors.
-- [ ] `pnpm types && pnpm check` clean.
-- [ ] Tag: `git tag 0.1.0`
+- [x] Canvas shows a time-driven animation, not a static gradient.
+- [x] FPS readout in the observability widget updates and looks plausible.
+- [x] No console errors.
+- [x] `pnpm types && pnpm check` clean.
+- [x] Tag: `git tag 0.1.0`
 
 ---
 
