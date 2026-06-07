@@ -102,7 +102,7 @@ The trail brightness/fade is also derived, not accumulated: a cell at distance `
 
 **Color-model difference vs the 2D — flagged for milestone 4.** The existing 2D component picks each glyph's color *probabilistically* from a six-bucket palette (`#00FF41`, `#39FF14`, `#00CC33`, `#003D10`, …) when the char is first drawn, then alpha-fades the whole frame uniformly. The WebGPU version's `brightness = falloff(k, ...)` is, by default, a monotone-in-distance gradient (deterministic, no stochastic spread within a column). Choice during milestone 4: either (a) keep the cleaner deterministic gradient — slightly different look but simpler; or (b) recover the stochastic flavor by multiplying base brightness by `hash3(seed, y_cell)` mapped into the same six probability buckets the 2D uses — closer to 2D parity. Decision deferred to implementation time; either approach fits this schema unchanged.
 
-The HDR scene texture's clear color is fully **transparent** (`vec4f(0,0,0,0)`); the package never paints a background. The canvas's CSS background (or the consumer's parent element) is what shows through. The 2D component's faint bluish trail-tint comes from its `#00110010` alpha-rect accumulation — there is no equivalent in this implementation and none is intended.
+The HDR scene texture is cleared each frame to the **same settled background color** the 2D produces: `#001100` (= `vec4f(0, 17/255, 0, 1)`). The 2D arrives at this color via its `#00110010` alpha-rect accumulation; we arrive at it directly via the clear color. Visually identical settled state, no accumulation needed (the trail fade is already analytic in the glyph shader). The constant lives in `gpu/palette.ts` as `BACKGROUND`.
 
 ### 4.2 Uniforms (per frame, CPU-written)
 
@@ -288,6 +288,20 @@ The per-milestone checklists themselves are authored during their milestone, not
 
 Added if and when judged worth the maintenance cost.
 
+## 7bis. TypeGPU ecosystem packages — what we actually use
+
+The project was scaffolded with several `@typegpu/*` packages pre-installed. This subsection assesses which earn their dependency for v1 and which get uninstalled in milestone 10.
+
+| Package | Verdict for v1 | Where it earns its keep |
+|---|---|---|
+| `@typegpu/react` | **Keep** | Used in every milestone. `useRoot`, `useFrame`, `useConfigureContext`, `useUniform`, `useMirroredUniform`. |
+| `@typegpu/noise` | **Keep** | Milestone 4: `randf.seed2 + randf.sample` for the per-cell glyph hash and per-column seed init. Possibly milestone 8 for organic-feeling cursor disturbance. |
+| `@typegpu/color` | **Probably keep** | Likely needed in milestones 6–7 for linear ↔ sRGB conversions (proper bloom + clean tone-mapping in the CRT pass). Final keep/drop decision at milestone 7 close. |
+| `@typegpu/sdf` | **Likely uninstall at milestone 10** | Provides primitive SDFs (`sdDisk`, `sdBox2d`, `opSmoothUnion`). Our glyph atlas is baked-from-font, not procedural, so these primitives don't apply. Re-evaluate during milestone 3 — if any auxiliary UI element (interaction halo, drag handle in the demo) is built procedurally with SDFs, the package earns its place. |
+| `@typegpu/radiance-cascades` | **Uninstall at milestone 10** | 2D global illumination via radiance cascades is a significant feature in its own right, separate from bloom. Out of scope for v1; bloom covers our "glow" need. **Tagged as the strongest v2 candidate**: "make the bright Matrix heads cast real soft light into the surrounding darkness via radiance cascades" would be a striking visual upgrade and a great follow-up article on its own. |
+
+**Milestone 10 includes an explicit dependency audit step**: re-run the verdicts above against actual usage, uninstall what isn't imported, and pin the kept versions before publish.
+
 ## 8. Milestones (study plan)
 
 Ten milestones. Each is one article section, one git tag (once the repo is `git init`-ed), and produces a runnable demo. Per the collaborative-coding preference, each milestone will be further sub-divided into the smallest practical steps during implementation — the ten below are the **article-section** granularity.
@@ -303,7 +317,7 @@ Ten milestones. Each is one article section, one git tag (once the repo is `git 
 | 7 | CRT pass (scanlines + chromatic aberration) | post-process chain composition, uv tricks, tone mapping to swap chain | `glyphs-crt` (full) render mode, `crt` toggle + sliders |
 | 8 | Mouse + scroll interaction | per-frame uniform writes, CPU↔GPU data flow, compute-side force application | `interaction` toggle + sliders, mouse position overlay |
 | 9 | `paused` static frame + resize parity + error handling | cleanup contracts, lifecycle correctness, settled-snapshot semantics | `paused` toggle, in-page console for runtime errors |
-| 10 | API polish + publish | public exports lock, `package.json` `exports`, README, version 0.1.0, npm publish | install the published package in a throwaway project and import it — verifies consumability |
+| 10 | API polish + publish | public exports lock, `package.json` `exports`, README, version 0.1.0, npm publish, **dependency audit (Section 7bis): uninstall any `@typegpu/*` package not actually imported** | install the published package in a throwaway project and import it — verifies consumability |
 
 Milestones 11+ (post-v1):
 
@@ -311,6 +325,7 @@ Milestones 11+ (post-v1):
 - **Article publication** — composed from the per-milestone notes and verification checklists.
 - **Tests** — vitest + Playwright if judged worth the maintenance cost.
 - **v2 features** — per-character glyph morphing, hidden "Wake up Neo" message, themeable palette.
+- **v2 experiment: radiance cascades** — adopt `@typegpu/radiance-cascades` to make bright Matrix heads cast soft volumetric light into the surrounding darkness. Distinct effect from bloom (proper light propagation respecting scene geometry vs. screen-space blur). Strong candidate for a stand-alone follow-up article.
 
 ## 9. Open questions
 
