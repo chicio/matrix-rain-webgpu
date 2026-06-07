@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 
 type Props = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
+  fps: number | null;
 };
 
 type LogEntry = {
@@ -13,7 +14,7 @@ type LogEntry = {
 
 const MAX_LOG_ENTRIES = 50;
 
-export function Observability({ canvasRef }: Props) {
+export function Observability({ canvasRef, fps }: Props) {
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [dpr, setDpr] = useState(1);
   const [errors, setErrors] = useState<LogEntry[]>([]);
@@ -65,7 +66,7 @@ export function Observability({ canvasRef }: Props) {
       <h3 className="rail-heading">Observability</h3>
       <dl className="rail-stats">
         <dt>FPS</dt>
-        <dd>—</dd>
+        <dd>{fps == null ? '—' : fps.toFixed(0)}</dd>
         <dt>size</dt>
         <dd>
           {size.w}×{size.h}

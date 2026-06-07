@@ -9,6 +9,10 @@ function App() {
   const root = useRoot();
   const time = useUniform(d.f32);
 
+  const fpsRef = useRef(0);
+  const lastFlushRef = useRef(0);
+  const [fps, setFps] = useState<number | null>(null);
+
   const renderPipeline = useMemo(
     () =>
       root.createRenderPipeline({
@@ -38,9 +42,16 @@ function App() {
 
   const [renderMode, setRenderMode] = useState<RenderMode>('state-debug');
 
-  useFrame(({ elapsedSeconds }) => {
+  useFrame(({ deltaSeconds, elapsedSeconds }) => {
     if (!ctxRef.current) {
       return;
+    }
+    if (deltaSeconds > 0) {
+      fpsRef.current = fpsRef.current * 0.9 + (1 / deltaSeconds) * 0.1;
+    }
+    if (elapsedSeconds - lastFlushRef.current > 1.0) {
+      setFps(fpsRef.current);
+      lastFlushRef.current = elapsedSeconds;
     }
     time.write(elapsedSeconds);
     renderPipeline.withColorAttachment({ view: ctxRef.current }).draw(3);
@@ -55,6 +66,7 @@ function App() {
         canvasRef={canvasRef}
         renderMode={renderMode}
         onRenderModeChange={setRenderMode}
+        fps={fps}
       />
     </div>
   );
