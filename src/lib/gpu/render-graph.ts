@@ -1,6 +1,11 @@
 import { d, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { Column, Uniforms } from './schemas';
-import { COMPUTE_STEP_WORKGROUP_SIZE, createComputeStepPipeline, type ComputeStepPipeline } from './pipelines/compute-step';
+import {
+  COMPUTE_STEP_WORKGROUP_SIZE,
+  createComputeStepPipeline,
+  type ComputeStepPipeline,
+} from './pipelines/compute-step';
+import { createRenderGlyphsPipeline, type RenderGlyphsPipeline } from './pipelines/render-glyphs';
 
 export type CreateRenderGraphArgs = {
   root: TgpuRoot;
@@ -55,14 +60,11 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
 
   let columns: ColumnsBuffer | null = null;
   let computePipeline: ComputeStepPipeline | null = null;
+  let renderPipeline: RenderGlyphsPipeline | null = null;
   let columnCount = 0;
-  let width = 0;
-  let height = 0;
   let stepAccumulator = 0;
 
   function resize(w: number, h: number) {
-    width = w;
-    height = h;
     const newCount = Math.max(1, Math.floor(w / cellSize));
     if (newCount !== columnCount) {
       columns?.buffer.destroy();
@@ -70,6 +72,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       columns = root.createMutable(d.arrayOf(Column, columnCount));
       columns.write(initialColumns(columnCount, h, cellSize));
       computePipeline = createComputeStepPipeline(root, columns, uniforms);
+      renderPipeline = createRenderGlyphsPipeline(root, columns, uniforms);
     }
     uniforms.patch({ resolution: d.vec2f(w, h) });
   }
@@ -89,10 +92,10 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   }
 
   function render() {
-    // TODO Task 2.4 — run render pipeline to draw falling rectangles
-    void ctx;
-    void width;
-    void height;
+    if (!renderPipeline) {
+      return;
+    }
+    renderPipeline.withColorAttachment({ view: ctx }).draw(3);
   }
 
   function setDensity(value: number) {
@@ -108,6 +111,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     columns?.buffer.destroy();
     columns = null;
     computePipeline = null;
+    renderPipeline = null;
   }
 
   return { resize, step, render, setDensity, setStepRate, dispose };

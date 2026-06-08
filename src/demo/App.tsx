@@ -2,8 +2,13 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { common, d, std } from 'typegpu';
 import { useConfigureContext, useFrame, useRoot, useUniform } from '@typegpu/react';
 
+import { useMatrixRainRenderer } from '../lib/hooks/use-matrix-rain-renderer';
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
+
+const DEFAULT_CELL_SIZE = 16;
+const DEFAULT_DENSITY = 0.96;
+const DEFAULT_STEP_RATE = 30;
 
 function App() {
   const root = useRoot();
@@ -42,6 +47,13 @@ function App() {
 
   const [renderMode, setRenderMode] = useState<RenderMode>('state-debug');
 
+  const { tick: tickRain } = useMatrixRainRenderer({
+    ctxRef,
+    cellSize: DEFAULT_CELL_SIZE * (window.devicePixelRatio || 1),
+    density: DEFAULT_DENSITY,
+    stepRate: DEFAULT_STEP_RATE,
+  });
+
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
     if (!ctxRef.current) {
       return;
@@ -53,8 +65,13 @@ function App() {
       setFps(fpsRef.current);
       lastFlushRef.current = elapsedSeconds;
     }
-    time.write(elapsedSeconds);
-    renderPipeline.withColorAttachment({ view: ctxRef.current }).draw(3);
+
+    if (renderMode === 'state-debug') {
+      tickRain(deltaSeconds, elapsedSeconds);
+    } else {
+      time.write(elapsedSeconds);
+      renderPipeline.withColorAttachment({ view: ctxRef.current }).draw(3);
+    }
   });
 
   return (
