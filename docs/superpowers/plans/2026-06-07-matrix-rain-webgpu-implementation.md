@@ -162,7 +162,7 @@ src/
 
 ### Task 2.1: Define `Column` schema and `palette.ts` constants
 
-- [ ] **Step 1:** `src/lib/gpu/schemas.ts`:
+- [x] **Step 1:** `src/lib/gpu/schemas.ts`:
   ```ts
   import { d } from "typegpu";
 
@@ -186,7 +186,7 @@ src/
     flags:         d.u32,
   });
   ```
-- [ ] **Step 2:** `src/lib/gpu/palette.ts`:
+- [x] **Step 2:** `src/lib/gpu/palette.ts`:
   ```ts
   // Hard-coded Matrix palette. See spec §4.1.
   export const BACKGROUND = [0 / 255, 17 / 255, 0 / 255, 1] as const;
@@ -194,41 +194,41 @@ src/
   export const TRAIL      = [0 / 255, 255 / 255, 65 / 255, 1] as const;    // #00FF41
   export const FADE       = [0 / 255, 61 / 255, 16 / 255, 1] as const;     // #003D10
   ```
-- [ ] **Step 3:** Commit: `feat(m2): Column + Uniforms schemas; palette constants`
+- [x] **Step 3:** Commit: `feat(m2): Column + Uniforms schemas; palette constants` *(landed as `b7e4ef8`; palette shipped as a single `PALETTE = {background, head, trail, fade} as const` object — see memory `[[project-current-progress]]`)*
 
 ### Task 2.2: Render-graph skeleton
 
-- [ ] **Step 1:** `src/lib/gpu/render-graph.ts` exposes `createRenderGraph({ root, ctx, cellSize, ... }): { init, resize, step, render, dispose }`. For M2 the implementation is minimal: allocate the column buffer + uniform buffer + create a compute pipeline + create a render pipeline that draws colored rectangles using instanced full-screen draws (one instance per column).
-- [ ] **Step 2:** Decide together (pair-coding step) on the seed/headY/speed init RNG and the `randf` integration from `@typegpu/noise`.
-- [ ] **Step 3:** Commit: `feat(m2): render-graph skeleton (init/step/render/dispose)`
+- [x] **Step 1:** `src/lib/gpu/render-graph.ts` exposes `createRenderGraph({ root, ctx, cellSize, ... }): { init, resize, step, render, dispose }`. For M2 the implementation is minimal: allocate the column buffer + uniform buffer + create a compute pipeline + create a render pipeline that draws colored rectangles using instanced full-screen draws (one instance per column). *(Built as a vanilla TS factory; `init` collapsed into `resize` — see memory.)*
+- [x] **Step 2:** Decide together (pair-coding step) on the seed/headY/speed init RNG and the `randf` integration from `@typegpu/noise`. *(CPU `Math.random()` for init; GPU `randf` for respawn; density semantic locked to `randf > density` to match 2D.)*
+- [x] **Step 3:** Commit: `feat(m2): render-graph skeleton (init/step/render/dispose)` *(landed as `27aa4c4` — message reads `feat(m2): render-graph skeleton (resize/step/render/dispose)`, reflecting the collapsed init.)*
 
 ### Task 2.3: Compute pass — advance heads
 
-- [ ] **Step 1:** `src/lib/gpu/pipelines/compute-step.ts`: a compute shader that reads `Column[i]`, writes `Column[i].headY = headY + speed` (saturating into respawn logic: if `headY * cellSize > height` and `randf.sample() < density`, reset `headY = 0` and rotate `seed`).
-- [ ] **Step 2:** Dispatch once per logical step (gated by elapsed seconds vs `1/stepRate`) inside `step()`.
-- [ ] **Step 3:** Commit: `feat(m2): compute pass advances column heads`
+- [x] **Step 1:** `src/lib/gpu/pipelines/compute-step.ts`: a compute shader that reads `Column[i]`, writes `Column[i].headY = headY + speed` (saturating into respawn logic: if `headY * cellSize > height` and `randf.sample() < density`, reset `headY = 0` and rotate `seed`). *(Implemented with the inverted density semantic — `randf > density` — for 2D parity; seed rotation via second `randf.sample() → u32`.)*
+- [x] **Step 2:** Dispatch once per logical step (gated by elapsed seconds vs `1/stepRate`) inside `step()`.
+- [x] **Step 3:** Commit: `feat(m2): compute pass advances column heads`
 
 ### Task 2.4: Render pass — draw columns as rectangles
 
-- [ ] **Step 1:** `src/lib/gpu/pipelines/render-glyphs.ts` (despite the name; we'll evolve it across M3-4): full-screen triangle vertex pass, fragment derives column index from `uv.x * columnCount`, looks up `Column[i]`, draws a colored rectangle whose top is at `(headY - tailLen) * cellSize` and bottom at `headY * cellSize`, with `BACKGROUND` everywhere else. Color = `mix(FADE, TRAIL, brightnessAlongTail)`. No glyphs yet.
-- [ ] **Step 2:** Wire the render-mode selector: only render when `mode === "state-debug"`. For other modes, keep showing M1's time gradient (so we can verify the selector switches work).
-- [ ] **Step 3:** Commit: `feat(m2): state-debug render mode shows falling rectangles`
+- [x] **Step 1:** `src/lib/gpu/pipelines/render-glyphs.ts` (despite the name; we'll evolve it across M3-4): full-screen triangle vertex pass, fragment derives column index from `uv.x * columnCount`, looks up `Column[i]`, draws a colored rectangle whose top is at `(headY - tailLen) * cellSize` and bottom at `headY * cellSize`, with `BACKGROUND` everywhere else. Color = `mix(FADE, TRAIL, brightnessAlongTail)`. No glyphs yet. *(Linear falloff `brightness = clamp(1 - k/tailLength, 0, 1)`; `std.select` instead of branches; safeCol guards the right edge.)*
+- [x] **Step 2:** Wire the render-mode selector: only render when `mode === "state-debug"`. For other modes, keep showing M1's time gradient (so we can verify the selector switches work). *(Hook `useMatrixRainRenderer` exposes `tick(dt, t)`; App routes inside `useFrame` based on `renderMode`. cellSize threaded as `fontSize × DPR` so the shader operates in device pixels.)*
+- [x] **Step 3:** Commit: `feat(m2): state-debug render mode shows falling rectangles`
 
 ### Task 2.5: Demo wiring — sliders, regenerate-seeds, column count
 
-- [ ] **Step 1:** Enable `density`, `stepRate`, `fontSize` sliders in the debug panel. They write into props on the renderer; `fontSize` change recomputes `columnCount` and re-runs the render-graph init.
-- [ ] **Step 2:** "Regenerate seeds" button: re-initializes all columns with fresh `seed` and zero `headY`. Verify visually that the falling animation restarts coherently.
-- [ ] **Step 3:** `<Observability />` reads column count from the renderer's exposed state.
-- [ ] **Step 4:** Commit: `feat(demo): m2 debug panel — density, stepRate, fontSize, regenerate seeds`
+- [x] **Step 1:** Enable `density`, `stepRate`, `fontSize` sliders in the debug panel. They write into props on the renderer; `fontSize` change recomputes `columnCount` and re-runs the render-graph init. *(`Group` got a `disabled` prop, default true; Simulation passes `disabled={false}`. `Slider` accepts optional `onChange`. density/stepRate sync per-tick via setters; fontSize triggers full graph disposal + lazy reconstruction via a `useEffect([args.cellSize])` cleanup.)*
+- [x] **Step 2:** "Regenerate seeds" button: re-initializes all columns with fresh `seed` and zero `headY`. Verify visually that the falling animation restarts coherently. *(New `regenerate()` on render-graph re-writes the columns buffer in place; hook exposes it as a `useCallback`.)*
+- [x] **Step 3:** `<Observability />` reads column count from the renderer's exposed state. *(`getColumnCount()` getter on render-graph; hook polls each tick and flushes to React state when it changes.)*
+- [x] **Step 4:** Commit: `feat(demo): m2 debug panel — density, stepRate, fontSize, regenerate seeds`
 
 **Chunk 2 verification:**
-- [ ] Render mode selector switches between `state-debug` (rectangles falling) and other modes (time gradient placeholder).
-- [ ] Density slider visibly affects respawn rate.
-- [ ] stepRate slider changes how fast columns advance.
-- [ ] fontSize slider changes column width and triggers re-init.
-- [ ] Regenerate-seeds resets visibly.
-- [ ] No console errors.
-- [ ] Tag: `git tag 0.2.0`
+- [x] Render mode selector switches between `state-debug` (rectangles falling) and other modes (time gradient placeholder).
+- [x] Density slider visibly affects respawn rate. *(Confirmed: density=1 empties the screen — `randf < 1` is always true, so respawn never fires.)*
+- [x] stepRate slider changes how fast columns advance.
+- [x] fontSize slider changes column width and triggers re-init.
+- [x] Regenerate-seeds resets visibly.
+- [x] No console errors.
+- [x] Tag: `git tag 0.2.0`
 
 ---
 
