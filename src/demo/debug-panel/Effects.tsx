@@ -2,24 +2,68 @@ import { Group } from './Group';
 import { Slider } from './Slider';
 import { Toggle } from './Toggle';
 
-function Button({ label }: { label: string }) {
+type ButtonProps = {
+  label: string;
+  onClick?: () => void;
+};
+
+function Button({ label, onClick }: ButtonProps) {
   return (
-    <button type="button" className="rail-button" disabled>
+    <button type="button" className="rail-button" disabled={!onClick} onClick={onClick}>
       {label}
     </button>
   );
 }
 
-export function Effects() {
+export type EffectsProps = {
+  density: number;
+  stepRate: number;
+  fontSize: number;
+  onDensityChange: (value: number) => void;
+  onStepRateChange: (value: number) => void;
+  onFontSizeChange: (value: number) => void;
+  onRegenerate: () => void;
+};
+
+export function Effects({
+  density,
+  stepRate,
+  fontSize,
+  onDensityChange,
+  onStepRateChange,
+  onFontSizeChange,
+  onRegenerate,
+}: EffectsProps) {
   return (
     <div className="rail-section">
       <h3 className="rail-heading">Effects</h3>
 
-      <Group title="Simulation" milestone="wired in M2">
-        <Slider label="density" min={0} max={1} step={0.01} value={0.5} />
-        <Slider label="stepRate (Hz)" min={1} max={60} step={1} value={20} />
-        <Slider label="fontSize (px)" min={8} max={40} step={1} value={18} />
-        <Button label="Regenerate seeds" />
+      <Group title="Simulation" milestone="wired in M2" disabled={false}>
+        <Slider
+          label="density"
+          min={0}
+          max={1}
+          step={0.01}
+          value={density}
+          onChange={onDensityChange}
+        />
+        <Slider
+          label="stepRate (Hz)"
+          min={1}
+          max={60}
+          step={1}
+          value={stepRate}
+          onChange={onStepRateChange}
+        />
+        <Slider
+          label="fontSize (px)"
+          min={8}
+          max={40}
+          step={1}
+          value={fontSize}
+          onChange={onFontSizeChange}
+        />
+        <Button label="Regenerate seeds" onClick={onRegenerate} />
       </Group>
 
       <Group title="Parallax" milestone="wired in M5">

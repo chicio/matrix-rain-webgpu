@@ -4,6 +4,7 @@ import type { RefObject } from 'react';
 type Props = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   fps: number | null;
+  columnCount: number | null;
 };
 
 type LogEntry = {
@@ -14,7 +15,7 @@ type LogEntry = {
 
 const MAX_LOG_ENTRIES = 50;
 
-export function Observability({ canvasRef, fps }: Props) {
+export function Observability({ canvasRef, fps, columnCount }: Props) {
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [dpr, setDpr] = useState(1);
   const [errors, setErrors] = useState<LogEntry[]>([]);
@@ -73,7 +74,7 @@ export function Observability({ canvasRef, fps }: Props) {
           <span className="rail-stat-aux"> @ {dpr.toFixed(2)}x</span>
         </dd>
         <dt>columns</dt>
-        <dd>—</dd>
+        <dd>{columnCount == null ? '—' : columnCount}</dd>
       </dl>
       <div className="rail-console">
         {errors.length === 0 ? (

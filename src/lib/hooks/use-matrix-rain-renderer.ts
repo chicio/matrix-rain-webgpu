@@ -1,4 +1,4 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useRoot } from '@typegpu/react';
 import { createRenderGraph, type RenderGraph } from '../gpu/render-graph';
 
@@ -11,21 +11,31 @@ type UseMatrixRainRendererArgs = {
 
 export type MatrixRainRenderer = {
   tick: (deltaSeconds: number, elapsedSeconds: number) => void;
+  regenerate: () => void;
+  columnCount: number;
 };
 
 export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRainRenderer {
   const root = useRoot();
   const graphRef = useRef<RenderGraph | null>(null);
+  const latestArgsRef = useRef(args);
+  latestArgsRef.current = args;
 
+  const [columnCount, setColumnCount] = useState(0);
+  const lastColumnCountRef = useRef(0);
+
+  // Disposal on unmount AND on cellSize change (next tick lazy-recreates with new value).
   useEffect(() => {
     return () => {
       graphRef.current?.dispose();
       graphRef.current = null;
+      lastColumnCountRef.current = 0;
+      setColumnCount(0);
     };
-  }, []);
+  }, [args.cellSize]);
 
   function tick(deltaSeconds: number, elapsedSeconds: number) {
-    const ctx = args.ctxRef.current;
+    const ctx = latestArgsRef.current.ctxRef.current;
     if (!ctx) {
       return;
     }
@@ -33,16 +43,30 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       graphRef.current = createRenderGraph({
         root,
         ctx,
-        cellSize: args.cellSize,
-        density: args.density,
-        stepRate: args.stepRate,
+        cellSize: latestArgsRef.current.cellSize,
+        density: latestArgsRef.current.density,
+        stepRate: latestArgsRef.current.stepRate,
       });
     }
+    const graph = graphRef.current;
+    graph.setDensity(latestArgsRef.current.density);
+    graph.setStepRate(latestArgsRef.current.stepRate);
+
     const canvas = ctx.canvas;
-    graphRef.current.resize(canvas.width, canvas.height);
-    graphRef.current.step(deltaSeconds, elapsedSeconds);
-    graphRef.current.render();
+    graph.resize(canvas.width, canvas.height);
+    graph.step(deltaSeconds, elapsedSeconds);
+    graph.render();
+
+    const current = graph.getColumnCount();
+    if (current !== lastColumnCountRef.current) {
+      lastColumnCountRef.current = current;
+      setColumnCount(current);
+    }
   }
 
-  return { tick };
+  const regenerate = useCallback(() => {
+    graphRef.current?.regenerate();
+  }, []);
+
+  return { tick, regenerate, columnCount };
 }

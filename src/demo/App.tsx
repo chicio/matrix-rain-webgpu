@@ -6,9 +6,10 @@ import { useMatrixRainRenderer } from '../lib/hooks/use-matrix-rain-renderer';
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
 
-const DEFAULT_CELL_SIZE = 16;
+const DEFAULT_FONT_SIZE = 16;
 const DEFAULT_DENSITY = 0.96;
 const DEFAULT_STEP_RATE = 30;
+const DPR = window.devicePixelRatio || 1;
 
 function App() {
   const root = useRoot();
@@ -46,12 +47,19 @@ function App() {
   );
 
   const [renderMode, setRenderMode] = useState<RenderMode>('state-debug');
+  const [density, setDensity] = useState(DEFAULT_DENSITY);
+  const [stepRate, setStepRate] = useState(DEFAULT_STEP_RATE);
+  const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
 
-  const { tick: tickRain } = useMatrixRainRenderer({
+  const {
+    tick: tickRain,
+    regenerate,
+    columnCount,
+  } = useMatrixRainRenderer({
     ctxRef,
-    cellSize: DEFAULT_CELL_SIZE * (window.devicePixelRatio || 1),
-    density: DEFAULT_DENSITY,
-    stepRate: DEFAULT_STEP_RATE,
+    cellSize: fontSize * DPR,
+    density,
+    stepRate,
   });
 
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
@@ -84,6 +92,14 @@ function App() {
         renderMode={renderMode}
         onRenderModeChange={setRenderMode}
         fps={fps}
+        columnCount={columnCount}
+        density={density}
+        stepRate={stepRate}
+        fontSize={fontSize}
+        onDensityChange={setDensity}
+        onStepRateChange={setStepRate}
+        onFontSizeChange={setFontSize}
+        onRegenerate={regenerate}
       />
     </div>
   );

@@ -21,6 +21,8 @@ export type RenderGraph = {
   render: () => void;
   setDensity: (density: number) => void;
   setStepRate: (stepRate: number) => void;
+  regenerate: () => void;
+  getColumnCount: () => number;
   dispose: () => void;
 };
 
@@ -62,9 +64,11 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   let computePipeline: ComputeStepPipeline | null = null;
   let renderPipeline: RenderGlyphsPipeline | null = null;
   let columnCount = 0;
+  let viewportHeight = 0;
   let stepAccumulator = 0;
 
   function resize(w: number, h: number) {
+    viewportHeight = h;
     const newCount = Math.max(1, Math.floor(w / cellSize));
     if (newCount !== columnCount) {
       columns?.buffer.destroy();
@@ -75,6 +79,13 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       renderPipeline = createRenderGlyphsPipeline(root, columns, uniforms);
     }
     uniforms.patch({ resolution: d.vec2f(w, h) });
+  }
+
+  function regenerate() {
+    if (!columns) {
+      return;
+    }
+    columns.write(initialColumns(columnCount, viewportHeight, cellSize));
   }
 
   function step(deltaSeconds: number, elapsedSeconds: number) {
@@ -114,5 +125,9 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     renderPipeline = null;
   }
 
-  return { resize, step, render, setDensity, setStepRate, dispose };
+  function getColumnCount() {
+    return columnCount;
+  }
+
+  return { resize, step, render, setDensity, setStepRate, regenerate, getColumnCount, dispose };
 }
