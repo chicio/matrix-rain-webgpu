@@ -1,5 +1,6 @@
 import { d, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { Column, Uniforms } from './schemas';
+import { COMPUTE_STEP_WORKGROUP_SIZE, createComputeStepPipeline, type ComputeStepPipeline } from './pipelines/compute-step';
 
 export type CreateRenderGraphArgs = {
   root: TgpuRoot;
@@ -53,6 +54,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   });
 
   let columns: ColumnsBuffer | null = null;
+  let computePipeline: ComputeStepPipeline | null = null;
   let columnCount = 0;
   let width = 0;
   let height = 0;
@@ -67,6 +69,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       columnCount = newCount;
       columns = root.createMutable(d.arrayOf(Column, columnCount));
       columns.write(initialColumns(columnCount, h, cellSize));
+      computePipeline = createComputeStepPipeline(root, columns, uniforms);
     }
     uniforms.patch({ resolution: d.vec2f(w, h) });
   }
@@ -74,15 +77,15 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   function step(deltaSeconds: number, elapsedSeconds: number) {
     stepAccumulator += deltaSeconds;
     const stepInterval = 1 / stepRate;
+    uniforms.patch({ time: elapsedSeconds, density });
+    const workgroupCount = Math.ceil(columnCount / COMPUTE_STEP_WORKGROUP_SIZE);
     while (stepAccumulator >= stepInterval) {
       stepAccumulator -= stepInterval;
-      // TODO Task 2.3 — dispatch compute pass
+      if (computePipeline && workgroupCount > 0) {
+        computePipeline.dispatchWorkgroups(workgroupCount);
+      }
     }
-    uniforms.patch({
-      time: elapsedSeconds,
-      stepProgress: stepAccumulator / stepInterval,
-      density,
-    });
+    uniforms.patch({ stepProgress: stepAccumulator / stepInterval });
   }
 
   function render() {
@@ -104,6 +107,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     uniforms.buffer.destroy();
     columns?.buffer.destroy();
     columns = null;
+    computePipeline = null;
   }
 
   return { resize, step, render, setDensity, setStepRate, dispose };
