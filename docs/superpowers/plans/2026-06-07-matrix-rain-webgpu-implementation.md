@@ -245,43 +245,44 @@ src/
 
 ### Task 3.1: Glyph set
 
-- [ ] **Step 1:** `src/lib/gpu/atlas/glyph-set.ts`:
+- [x] **Step 1:** `src/lib/gpu/atlas/glyph-set.ts`:
   ```ts
   // Mirrors chicio-blog/src/components/.../matrix-rain.tsx
   export const GLYPHS = "ﾊﾐﾋｰｳｼﾅﾓﾆｻﾜﾂｵﾘｱﾎﾃﾏｹﾒｴｶｷﾑﾕﾗｾﾈｽﾀﾇﾍ012345789Z:.=*+-<>".split("");
   export const GLYPH_COUNT = GLYPHS.length;
   export const ATLAS_LAYER_SIZE = 64; // px per glyph layer; tune at M3 end
   ```
-- [ ] **Step 2:** Commit: `feat(m3): glyph set`
+- [x] **Step 2:** Commit: `feat(m3): glyph set` *(landed as `7c0be49`; missing digit '6' preserved verbatim from chicio-blog source.)*
 
 ### Task 3.2: CPU-side SDF baker
 
-- [ ] **Step 1:** `src/lib/gpu/atlas/build-sdf-atlas.ts` exports `buildSdfAtlas(): Promise<{ data: Uint8Array; layerCount: number; layerSize: number }>`. Implementation:
+- [x] **Step 1:** `src/lib/gpu/atlas/build-sdf-atlas.ts` exports `buildSdfAtlas(): Promise<{ data: Uint8Array; layerCount: number; layerSize: number }>`. Implementation:
   1. Create an offscreen `OffscreenCanvas(layerSize, layerSize)` 2D context.
   2. For each glyph: clear, set monospace font (e.g. `"Courier Prime"` fallback to monospace), draw centered, read back as binary alpha mask, run a small distance transform (8-direction sequential Euclidean approximation; the math is short — write it inline, no library).
   3. Pack each layer's SDF (Uint8 encoded distance) sequentially into one `Uint8Array` of length `layerCount * layerSize * layerSize`.
-- [ ] **Step 2:** Pair-coding moment: walk through the distance transform together. Reference: "8SSEDT" or any sequential Euclidean DT; we don't need the most accurate variant, just a usable one.
-- [ ] **Step 3:** Commit: `feat(m3): runtime SDF atlas baker`
+  *(Settled on plain `monospace` font stack; SPREAD=8 px each side of the edge; signed convention positive-inside / negative-outside.)*
+- [x] **Step 2:** Pair-coding moment: walk through the distance transform together. Reference: "8SSEDT" or any sequential Euclidean DT; we don't need the most accurate variant, just a usable one.
+- [x] **Step 3:** Commit: `feat(m3): runtime SDF atlas baker` *(landed as `44fd69d`; full 8SSEDT, two passes per glyph for the signed combination, sweep loops refactored into a `propagateFrom` helper iterating a declarative neighbor table.)*
 
 ### Task 3.3: Upload atlas as R8 texture array
 
-- [ ] **Step 1:** In `render-graph.ts` init, await `buildSdfAtlas()`, create a 2D-array texture (`r8unorm`, dimensions `layerSize × layerSize × layerCount`), `writeTexture` from the Uint8Array.
-- [ ] **Step 2:** Add a sampler with `magFilter=linear, minFilter=linear, addressMode=clampToEdge`.
-- [ ] **Step 3:** Commit: `feat(m3): upload SDF atlas as R8 texture array`
+- [x] **Step 1:** In `render-graph.ts` init, await `buildSdfAtlas()`, create a 2D-array texture (`r8unorm`, dimensions `layerSize × layerSize × layerCount`), `writeTexture` from the Uint8Array. *(Baking moved to the hook via `useEffect` on mount so `createRenderGraph` stayed synchronous; bytes uploaded via `root.unwrap(atlasTexture)` + `root.device.queue.writeTexture()`.)*
+- [x] **Step 2:** Add a sampler with `magFilter=linear, minFilter=linear, addressMode=clampToEdge`.
+- [x] **Step 3:** Commit: `feat(m3): upload SDF atlas as R8 texture array` *(landed as `cc3d57d`.)*
 
 ### Task 3.4: Render-glyphs samples a fixed atlas layer
 
-- [ ] **Step 1:** Modify `pipelines/render-glyphs.ts` to draw a single quad in the center of the canvas that samples the atlas at layer 0, using `smoothstep(0.5 - aaWidth, 0.5 + aaWidth, sample)` to anti-alias the glyph edge.
-- [ ] **Step 2:** Add a debug-panel slider for "atlas layer" (0..layerCount-1) so we can scrub through and verify every glyph baked correctly.
-- [ ] **Step 3:** Demo: add a new render-mode entry `atlas-debug` to the selector enum (the entry didn't exist in Chunk 0's `state-debug | glyphs-flat | glyphs-parallax | glyphs-bloom | glyphs-crt` list). This temporary single-glyph mode lives there. After M4 closes we can remove it or keep it for diagnostics.
-- [ ] **Step 4:** Commit: `feat(m3): render-glyphs samples one atlas layer with smoothstep AA`
+- [x] **Step 1:** ~~Modify `pipelines/render-glyphs.ts`~~ — created a separate `pipelines/render-atlas-debug.ts` instead (cleaner separation; render-glyphs stays focused on column-driven rendering). Centered quad samples the atlas, smoothstep AA via `fwidth(localUv.x) * 0.5` band.
+- [x] **Step 2:** Added "Atlas debug" group in the rail with the atlas-layer slider (0..GLYPH_COUNT-1). Disabled outside atlas-debug mode via `Group.disabled` prop.
+- [x] **Step 3:** Added `atlas-debug` to the render-mode enum. Hook gained `atlasLayer` + `atlasDebug` args; tick branches between `render()` and `renderAtlasDebug()`.
+- [x] **Step 4:** Commit: `feat(m3): render-glyphs samples one atlas layer with smoothstep AA` *(landed as `b6fbd0d`.)*
 
 **Chunk 3 verification:**
-- [ ] `atlas-debug` mode shows a sharp, anti-aliased glyph.
-- [ ] Scrubbing the atlas layer slider walks through every glyph; none look broken/clipped.
-- [ ] Atlas build time printed in console is reasonable (<50ms).
-- [ ] `state-debug` mode still works (rectangles falling).
-- [ ] Tag: `git tag 0.3.0`
+- [x] `atlas-debug` mode shows a sharp, anti-aliased glyph.
+- [x] Scrubbing the atlas layer slider walks through every glyph; none look broken/clipped.
+- [ ] Atlas build time printed in console is reasonable (<50ms). *(Not measured explicitly; one-time mount cost is imperceptible. Skipping to tag.)*
+- [x] `state-debug` mode still works (rectangles falling).
+- [x] Tag: `git tag 0.3.0`
 
 ---
 
