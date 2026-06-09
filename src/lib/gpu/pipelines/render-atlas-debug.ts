@@ -1,14 +1,10 @@
 import { common, d, std, tgpu, type TgpuRoot, type TgpuUniform } from 'typegpu';
+import { atlasBindings } from '../atlas/bindings';
 import { PALETTE } from '../palette';
 import { Uniforms } from '../schemas';
 
 // Fraction of the smaller canvas dimension that the centered debug quad occupies.
 const QUAD_FRACTION = 0.6;
-
-export const atlasBindings = tgpu.bindGroupLayout({
-  atlas: { texture: d.texture2dArray(d.f32) },
-  sampler: { sampler: 'filtering' },
-});
 
 export function createRenderAtlasDebugPipeline(
   root: TgpuRoot,

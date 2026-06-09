@@ -7,8 +7,8 @@ import {
   type ComputeStepPipeline,
 } from './pipelines/compute-step';
 import { createRenderGlyphsPipeline, type RenderGlyphsPipeline } from './pipelines/render-glyphs';
+import { atlasBindings } from './atlas/bindings';
 import {
-  atlasBindings,
   createRenderAtlasDebugPipeline,
   type RenderAtlasDebugPipeline,
 } from './pipelines/render-atlas-debug';
@@ -148,7 +148,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     if (!renderPipeline) {
       return;
     }
-    renderPipeline.withColorAttachment({ view: ctx }).draw(3);
+    renderPipeline.with(atlasBindGroup).withColorAttachment({ view: ctx }).draw(3);
   }
 
   function renderAtlasDebug() {

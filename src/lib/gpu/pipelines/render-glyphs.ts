@@ -1,6 +1,14 @@
 import { common, d, std, tgpu, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
+import { atlasBindings } from '../atlas/bindings';
+import { glyphIndex } from '../hash';
 import { PALETTE } from '../palette';
 import { Column, Uniforms } from '../schemas';
+
+// Falloff exponent — steeper than linear keeps the head visually bright longer.
+const FALLOFF_POWER = 1.5;
+// Minimum brightness multiplier for the farthest column (depth = 0). M5 will
+// vary depth per column; M4 has depth = 1 for all, so this is a no-op for now.
+const MIN_DEPTH_BRIGHTNESS = 0.3;
 
 export function createRenderGlyphsPipeline(
   root: TgpuRoot,
@@ -17,20 +25,43 @@ export function createRenderGlyphsPipeline(
     const cellSize = uniforms.$.cellSize;
     const columnCount = d.u32(std.floor(resolution.x / cellSize));
 
-    const col = std.min(d.u32(std.floor(uv.x * d.f32(columnCount))), columnCount - 1);
+    const pixelPos = uv * resolution;
+    const col = std.min(d.u32(std.floor(pixelPos.x / cellSize)), columnCount - 1);
+    const row = d.u32(std.floor(pixelPos.y / cellSize));
+    const localUv = d.vec2f(std.fract(pixelPos.x / cellSize), std.fract(pixelPos.y / cellSize));
+
     const column = columns.$[col];
+    const headRow = d.i32(std.floor(column.headY));
+    const k = headRow - d.i32(row);
+    const tailLengthI = d.i32(column.tailLength);
+    const inTail = k >= 0 && k <= tailLengthI;
 
-    const slotY = (uv.y * resolution.y) / cellSize;
-    const k = column.headY - slotY;
-    const inTail = k >= 0 && k <= column.tailLength;
-    const brightness = std.clamp(1 - k / column.tailLength, 0, 1);
+    const layer = glyphIndex(column.seed, row);
+    const sample = std.textureSample(
+      atlasBindings.$.atlas,
+      atlasBindings.$.sampler,
+      localUv,
+      d.i32(layer),
+    );
+    const edgeHalfBand = std.fwidth(localUv.x) * 0.5;
+    const coverage = std.smoothstep(0.5 - edgeHalfBand, 0.5 + edgeHalfBand, sample.x);
 
-    const fade = d.vec3f(PALETTE.fade[0], PALETTE.fade[1], PALETTE.fade[2]);
+    const tailProgress = d.f32(k) / column.tailLength;
+    const tailFalloff = std.pow(std.clamp(1 - tailProgress, 0, 1), FALLOFF_POWER);
+    const depthDimming = std.mix(MIN_DEPTH_BRIGHTNESS, 1, column.depth);
+    const brightness = tailFalloff * depthDimming;
+
+    const head = d.vec3f(PALETTE.head[0], PALETTE.head[1], PALETTE.head[2]);
     const trail = d.vec3f(PALETTE.trail[0], PALETTE.trail[1], PALETTE.trail[2]);
+    const fade = d.vec3f(PALETTE.fade[0], PALETTE.fade[1], PALETTE.fade[2]);
     const bg = d.vec3f(PALETTE.background[0], PALETTE.background[1], PALETTE.background[2]);
 
-    const trailColor = std.mix(fade, trail, brightness);
-    const color = std.select(bg, trailColor, inTail);
+    const trailColor = std.mix(trail, fade, std.clamp(tailProgress, 0, 1));
+    const baseColor = std.select(trailColor, head, k === 0);
+    const glyphColor = baseColor * brightness;
+    const finalRgb = std.mix(bg, glyphColor, coverage);
+
+    const color = std.select(bg, finalRgb, inTail);
     return d.vec4f(color, 1);
   });
 

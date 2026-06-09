@@ -9,7 +9,9 @@ import type { RenderMode } from './debug-panel/RenderMode';
 
 const DEFAULT_FONT_SIZE = 16;
 const DEFAULT_DENSITY = 0.96;
-const DEFAULT_STEP_RATE = 30;
+// Matches chicio-blog 2D reference's frameRate; 30 felt too fast once
+// glyphs were sharp + readable (M4) vs the M2 solid rectangles.
+const DEFAULT_STEP_RATE = 20;
 const DPR = window.devicePixelRatio || 1;
 
 function App() {
