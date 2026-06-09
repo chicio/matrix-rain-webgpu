@@ -56,7 +56,8 @@ function App() {
   const [atlasLayer, setAtlasLayer] = useState(0);
 
   const isAtlasDebug = renderMode === 'atlas-debug';
-  const useRainRenderer = renderMode === 'state-debug' || isAtlasDebug;
+  const useRainRenderer =
+    renderMode === 'state-debug' || renderMode === 'glyphs-flat' || isAtlasDebug;
 
   const {
     tick: tickRain,
