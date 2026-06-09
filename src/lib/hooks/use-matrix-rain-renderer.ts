@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useRoot } from '@typegpu/react';
+import { buildSdfAtlas, type SdfAtlas } from '../gpu/atlas/build-sdf-atlas';
 import { createRenderGraph, type RenderGraph } from '../gpu/render-graph';
 
 type UseMatrixRainRendererArgs = {
@@ -23,6 +24,20 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
 
   const [columnCount, setColumnCount] = useState(0);
   const lastColumnCountRef = useRef(0);
+  const atlasRef = useRef<SdfAtlas | null>(null);
+
+  // Bake the SDF atlas once on mount; cancelable in case the component unmounts mid-bake.
+  useEffect(() => {
+    let cancelled = false;
+    buildSdfAtlas().then((result) => {
+      if (!cancelled) {
+        atlasRef.current = result;
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Disposal on unmount AND on cellSize change (next tick lazy-recreates with new value).
   useEffect(() => {
@@ -36,13 +51,15 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
 
   function tick(deltaSeconds: number, elapsedSeconds: number) {
     const ctx = latestArgsRef.current.ctxRef.current;
-    if (!ctx) {
+    const atlas = atlasRef.current;
+    if (!ctx || !atlas) {
       return;
     }
     if (!graphRef.current) {
       graphRef.current = createRenderGraph({
         root,
         ctx,
+        atlas,
         cellSize: latestArgsRef.current.cellSize,
         density: latestArgsRef.current.density,
         stepRate: latestArgsRef.current.stepRate,

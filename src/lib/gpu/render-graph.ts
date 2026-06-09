@@ -1,4 +1,5 @@
 import { d, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
+import type { SdfAtlas } from './atlas/build-sdf-atlas';
 import { Column, Uniforms } from './schemas';
 import {
   COMPUTE_STEP_WORKGROUP_SIZE,
@@ -10,6 +11,7 @@ import { createRenderGlyphsPipeline, type RenderGlyphsPipeline } from './pipelin
 export type CreateRenderGraphArgs = {
   root: TgpuRoot;
   ctx: GPUCanvasContext;
+  atlas: SdfAtlas;
   cellSize: number;
   density: number;
   stepRate: number;
@@ -44,7 +46,7 @@ function initialColumns(count: number, viewportHeight: number, cellSize: number)
 }
 
 export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
-  const { root, ctx, cellSize } = args;
+  const { root, ctx, atlas, cellSize } = args;
   let density = args.density;
   let stepRate = args.stepRate;
 
@@ -59,6 +61,31 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     scrollVelocity: 0,
     flags: 0,
   });
+
+  const atlasTexture = root
+    .createTexture({
+      size: [atlas.layerSize, atlas.layerSize, atlas.layerCount],
+      format: 'r8unorm',
+    })
+    .$usage('sampled');
+
+  const atlasSampler = root.createSampler({
+    magFilter: 'linear',
+    minFilter: 'linear',
+    addressModeU: 'clamp-to-edge',
+    addressModeV: 'clamp-to-edge',
+  });
+
+  // root.unwrap() forces GPU materialization so writeTexture has a real GPUTexture target.
+  root.device.queue.writeTexture(
+    { texture: root.unwrap(atlasTexture) },
+    atlas.data,
+    { bytesPerRow: atlas.layerSize, rowsPerImage: atlas.layerSize },
+    [atlas.layerSize, atlas.layerSize, atlas.layerCount],
+  );
+
+  // T3.4 will bind atlasTexture + atlasSampler into render-glyphs; held in closure until then.
+  void atlasSampler;
 
   let columns: ColumnsBuffer | null = null;
   let computePipeline: ComputeStepPipeline | null = null;
