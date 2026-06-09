@@ -8,6 +8,8 @@ type UseMatrixRainRendererArgs = {
   cellSize: number;
   density: number;
   stepRate: number;
+  atlasLayer: number;
+  atlasDebug: boolean;
 };
 
 export type MatrixRainRenderer = {
@@ -66,13 +68,18 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       });
     }
     const graph = graphRef.current;
-    graph.setDensity(latestArgsRef.current.density);
-    graph.setStepRate(latestArgsRef.current.stepRate);
-
     const canvas = ctx.canvas;
     graph.resize(canvas.width, canvas.height);
-    graph.step(deltaSeconds, elapsedSeconds);
-    graph.render();
+
+    if (latestArgsRef.current.atlasDebug) {
+      graph.setAtlasLayer(latestArgsRef.current.atlasLayer);
+      graph.renderAtlasDebug();
+    } else {
+      graph.setDensity(latestArgsRef.current.density);
+      graph.setStepRate(latestArgsRef.current.stepRate);
+      graph.step(deltaSeconds, elapsedSeconds);
+      graph.render();
+    }
 
     const current = graph.getColumnCount();
     if (current !== lastColumnCountRef.current) {

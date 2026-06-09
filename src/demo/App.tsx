@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { common, d, std } from 'typegpu';
 import { useConfigureContext, useFrame, useRoot, useUniform } from '@typegpu/react';
 
+import { GLYPH_COUNT } from '../lib/gpu/atlas/glyph-set';
 import { useMatrixRainRenderer } from '../lib/hooks/use-matrix-rain-renderer';
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
@@ -50,6 +51,10 @@ function App() {
   const [density, setDensity] = useState(DEFAULT_DENSITY);
   const [stepRate, setStepRate] = useState(DEFAULT_STEP_RATE);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
+  const [atlasLayer, setAtlasLayer] = useState(0);
+
+  const isAtlasDebug = renderMode === 'atlas-debug';
+  const useRainRenderer = renderMode === 'state-debug' || isAtlasDebug;
 
   const {
     tick: tickRain,
@@ -60,6 +65,8 @@ function App() {
     cellSize: fontSize * DPR,
     density,
     stepRate,
+    atlasLayer,
+    atlasDebug: isAtlasDebug,
   });
 
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
@@ -74,7 +81,7 @@ function App() {
       lastFlushRef.current = elapsedSeconds;
     }
 
-    if (renderMode === 'state-debug') {
+    if (useRainRenderer) {
       tickRain(deltaSeconds, elapsedSeconds);
     } else {
       time.write(elapsedSeconds);
@@ -96,9 +103,13 @@ function App() {
         density={density}
         stepRate={stepRate}
         fontSize={fontSize}
+        atlasLayer={atlasLayer}
+        atlasLayerMax={GLYPH_COUNT - 1}
+        atlasDebugActive={isAtlasDebug}
         onDensityChange={setDensity}
         onStepRateChange={setStepRate}
         onFontSizeChange={setFontSize}
+        onAtlasLayerChange={setAtlasLayer}
         onRegenerate={regenerate}
       />
     </div>

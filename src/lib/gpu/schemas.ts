@@ -18,4 +18,5 @@ export const Uniforms = d.struct({
   mouseStrength: d.f32,
   scrollVelocity: d.f32,
   flags: d.u32,
+  atlasLayer: d.u32,
 });

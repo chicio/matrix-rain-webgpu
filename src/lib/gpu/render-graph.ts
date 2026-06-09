@@ -7,6 +7,11 @@ import {
   type ComputeStepPipeline,
 } from './pipelines/compute-step';
 import { createRenderGlyphsPipeline, type RenderGlyphsPipeline } from './pipelines/render-glyphs';
+import {
+  atlasBindings,
+  createRenderAtlasDebugPipeline,
+  type RenderAtlasDebugPipeline,
+} from './pipelines/render-atlas-debug';
 
 export type CreateRenderGraphArgs = {
   root: TgpuRoot;
@@ -21,8 +26,10 @@ export type RenderGraph = {
   resize: (width: number, height: number) => void;
   step: (deltaSeconds: number, elapsedSeconds: number) => void;
   render: () => void;
+  renderAtlasDebug: () => void;
   setDensity: (density: number) => void;
   setStepRate: (stepRate: number) => void;
+  setAtlasLayer: (layer: number) => void;
   regenerate: () => void;
   getColumnCount: () => number;
   dispose: () => void;
@@ -60,6 +67,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     mouseStrength: 0,
     scrollVelocity: 0,
     flags: 0,
+    atlasLayer: 0,
   });
 
   const atlasTexture = root
@@ -84,8 +92,15 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     [atlas.layerSize, atlas.layerSize, atlas.layerCount],
   );
 
-  // T3.4 will bind atlasTexture + atlasSampler into render-glyphs; held in closure until then.
-  void atlasSampler;
+  const atlasBindGroup = root.createBindGroup(atlasBindings, {
+    atlas: atlasTexture.createView(d.texture2dArray(d.f32)),
+    sampler: atlasSampler,
+  });
+
+  const atlasDebugPipeline: RenderAtlasDebugPipeline = createRenderAtlasDebugPipeline(
+    root,
+    uniforms,
+  );
 
   let columns: ColumnsBuffer | null = null;
   let computePipeline: ComputeStepPipeline | null = null;
@@ -136,12 +151,20 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     renderPipeline.withColorAttachment({ view: ctx }).draw(3);
   }
 
+  function renderAtlasDebug() {
+    atlasDebugPipeline.with(atlasBindGroup).withColorAttachment({ view: ctx }).draw(3);
+  }
+
   function setDensity(value: number) {
     density = value;
   }
 
   function setStepRate(value: number) {
     stepRate = value;
+  }
+
+  function setAtlasLayer(value: number) {
+    uniforms.patch({ atlasLayer: value });
   }
 
   function dispose() {
@@ -156,5 +179,16 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     return columnCount;
   }
 
-  return { resize, step, render, setDensity, setStepRate, regenerate, getColumnCount, dispose };
+  return {
+    resize,
+    step,
+    render,
+    renderAtlasDebug,
+    setDensity,
+    setStepRate,
+    setAtlasLayer,
+    regenerate,
+    getColumnCount,
+    dispose,
+  };
 }

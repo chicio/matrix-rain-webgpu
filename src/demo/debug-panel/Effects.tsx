@@ -19,9 +19,13 @@ export type EffectsProps = {
   density: number;
   stepRate: number;
   fontSize: number;
+  atlasLayer: number;
+  atlasLayerMax: number;
+  atlasDebugActive: boolean;
   onDensityChange: (value: number) => void;
   onStepRateChange: (value: number) => void;
   onFontSizeChange: (value: number) => void;
+  onAtlasLayerChange: (value: number) => void;
   onRegenerate: () => void;
 };
 
@@ -29,9 +33,13 @@ export function Effects({
   density,
   stepRate,
   fontSize,
+  atlasLayer,
+  atlasLayerMax,
+  atlasDebugActive,
   onDensityChange,
   onStepRateChange,
   onFontSizeChange,
+  onAtlasLayerChange,
   onRegenerate,
 }: EffectsProps) {
   return (
@@ -64,6 +72,17 @@ export function Effects({
           onChange={onFontSizeChange}
         />
         <Button label="Regenerate seeds" onClick={onRegenerate} />
+      </Group>
+
+      <Group title="Atlas debug" milestone="M3 diagnostic" disabled={!atlasDebugActive}>
+        <Slider
+          label="atlas layer"
+          min={0}
+          max={atlasLayerMax}
+          step={1}
+          value={atlasLayer}
+          onChange={onAtlasLayerChange}
+        />
       </Group>
 
       <Group title="Parallax" milestone="wired in M5">

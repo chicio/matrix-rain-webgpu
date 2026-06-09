@@ -1,5 +1,6 @@
 export const RENDER_MODES = [
   'state-debug',
+  'atlas-debug',
   'glyphs-flat',
   'glyphs-parallax',
   'glyphs-bloom',
