@@ -1,6 +1,6 @@
 import { common, d, std, tgpu, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { atlasBindings } from '../atlas/bindings';
-import { glyphIndex } from '../hash';
+import { brightnessJitter, glyphIndex } from '../hash';
 import { PALETTE } from '../palette';
 import { Column, Uniforms } from '../schemas';
 
@@ -49,7 +49,10 @@ export function createRenderGlyphsPipeline(
     const tailProgress = d.f32(k) / column.tailLength;
     const tailFalloff = std.pow(std.clamp(1 - tailProgress, 0, 1), FALLOFF_POWER);
     const depthDimming = std.mix(MIN_DEPTH_BRIGHTNESS, 1, column.depth);
-    const brightness = tailFalloff * depthDimming;
+    // Per-cell ±20% variation so neighbours in the same trail position differ
+    // slightly — film-faithful organic feel. Head stays uniformly bright.
+    const trailJitter = std.select(brightnessJitter(column.seed, row), d.f32(0), k === 0);
+    const brightness = std.clamp(tailFalloff * depthDimming * (1 + trailJitter), 0, 1);
 
     const head = d.vec3f(PALETTE.head[0], PALETTE.head[1], PALETTE.head[2]);
     const trail = d.vec3f(PALETTE.trail[0], PALETTE.trail[1], PALETTE.trail[2]);

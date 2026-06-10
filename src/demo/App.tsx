@@ -7,11 +7,12 @@ import { useMatrixRainRenderer } from '../lib/hooks/use-matrix-rain-renderer';
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
 
-const DEFAULT_FONT_SIZE = 16;
+const DEFAULT_FONT_SIZE = 20;
 const DEFAULT_DENSITY = 0.96;
-// Matches chicio-blog 2D reference's frameRate; 30 felt too fast once
-// glyphs were sharp + readable (M4) vs the M2 solid rectangles.
-const DEFAULT_STEP_RATE = 20;
+// 2D reference uses frameRate=20 but its low-alpha fade overlay softens
+// motion perceptually. Our crisp per-cell render needs ~half that rate to
+// feel comparable; 10 matches the 2D's perceived speed.
+const DEFAULT_STEP_RATE = 10;
 const DPR = window.devicePixelRatio || 1;
 
 function App() {
