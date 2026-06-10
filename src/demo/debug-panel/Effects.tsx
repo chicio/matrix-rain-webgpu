@@ -25,6 +25,9 @@ export type EffectsProps = {
   speedRange: [number, number];
   tailRange: [number, number];
   depthDim: number;
+  bloomEnabled: boolean;
+  bloomThreshold: number;
+  bloomIntensity: number;
   onDensityChange: (value: number) => void;
   onStepRateChange: (value: number) => void;
   onFontSizeChange: (value: number) => void;
@@ -32,6 +35,9 @@ export type EffectsProps = {
   onSpeedRangeChange: (value: [number, number]) => void;
   onTailRangeChange: (value: [number, number]) => void;
   onDepthDimChange: (value: number) => void;
+  onBloomEnabledChange: (value: boolean) => void;
+  onBloomThresholdChange: (value: number) => void;
+  onBloomIntensityChange: (value: number) => void;
   onRegenerate: () => void;
 };
 
@@ -45,6 +51,9 @@ export function Effects({
   speedRange,
   tailRange,
   depthDim,
+  bloomEnabled,
+  bloomThreshold,
+  bloomIntensity,
   onDensityChange,
   onStepRateChange,
   onFontSizeChange,
@@ -52,6 +61,9 @@ export function Effects({
   onSpeedRangeChange,
   onTailRangeChange,
   onDepthDimChange,
+  onBloomEnabledChange,
+  onBloomThresholdChange,
+  onBloomIntensityChange,
   onRegenerate,
 }: EffectsProps) {
   return (
@@ -140,10 +152,24 @@ export function Effects({
         />
       </Group>
 
-      <Group title="Bloom" milestone="wired in M6">
-        <Toggle label="bloom" />
-        <Slider label="intensity" min={0} max={3} step={0.05} value={1.0} />
-        <Slider label="threshold" min={0} max={2} step={0.05} value={0.8} />
+      <Group title="Bloom" disabled={false}>
+        <Toggle label="bloom" checked={bloomEnabled} onChange={onBloomEnabledChange} />
+        <Slider
+          label="intensity"
+          min={0}
+          max={3}
+          step={0.05}
+          value={bloomIntensity}
+          onChange={onBloomIntensityChange}
+        />
+        <Slider
+          label="threshold"
+          min={0}
+          max={2}
+          step={0.05}
+          value={bloomThreshold}
+          onChange={onBloomThresholdChange}
+        />
       </Group>
 
       <Group title="CRT" milestone="wired in M7">

@@ -13,6 +13,9 @@ type UseMatrixRainRendererArgs = {
   speedRange: [number, number];
   tailRange: [number, number];
   depthDim: number;
+  bloomEnabled: boolean;
+  bloomThreshold: number;
+  bloomIntensity: number;
 };
 
 export type MatrixRainRenderer = {
@@ -85,6 +88,9 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
         speedRange: latestArgsRef.current.speedRange,
         tailRange: latestArgsRef.current.tailRange,
         depthDim: latestArgsRef.current.depthDim,
+        bloomEnabled: latestArgsRef.current.bloomEnabled,
+        bloomThreshold: latestArgsRef.current.bloomThreshold,
+        bloomIntensity: latestArgsRef.current.bloomIntensity,
       });
     }
     const graph = graphRef.current;
@@ -98,6 +104,9 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       graph.setDensity(latestArgsRef.current.density);
       graph.setStepRate(latestArgsRef.current.stepRate);
       graph.setDepthDim(latestArgsRef.current.depthDim);
+      graph.setBloomEnabled(latestArgsRef.current.bloomEnabled);
+      graph.setBloomThreshold(latestArgsRef.current.bloomThreshold);
+      graph.setBloomIntensity(latestArgsRef.current.bloomIntensity);
       graph.step(deltaSeconds, elapsedSeconds);
       graph.render();
     }

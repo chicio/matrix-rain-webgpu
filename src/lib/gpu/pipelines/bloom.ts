@@ -99,3 +99,30 @@ export function createBlurPipeline(
 }
 
 export type BlurPipeline = ReturnType<typeof createBlurPipeline>;
+
+// Combine samples both the full-bright scene and the blurred bloom.
+export const combineBindings = tgpu.bindGroupLayout({
+  scene: { texture: d.texture2d(d.f32) },
+  bloom: { texture: d.texture2d(d.f32) },
+  sampler: { sampler: 'filtering' },
+});
+
+export function createCombinePipeline(root: TgpuRoot, uniforms: TgpuUniform<typeof Uniforms>) {
+  const fragMain = tgpu.fragmentFn({
+    in: { uv: d.vec2f },
+    out: d.vec4f,
+  })(({ uv }) => {
+    'use gpu';
+    const scene = std.textureSample(combineBindings.$.scene, combineBindings.$.sampler, uv);
+    const bloom = std.textureSample(combineBindings.$.bloom, combineBindings.$.sampler, uv);
+    const combined = scene.rgb + bloom.rgb * uniforms.$.bloomIntensity;
+    return d.vec4f(combined, 1);
+  });
+
+  return root.createRenderPipeline({
+    vertex: common.fullScreenTriangle,
+    fragment: fragMain,
+  });
+}
+
+export type CombinePipeline = ReturnType<typeof createCombinePipeline>;

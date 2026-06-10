@@ -15,6 +15,9 @@ const DEFAULT_STEP_RATE = 10;
 const DEFAULT_SPEED_RANGE: [number, number] = [0.4, 1.5];
 const DEFAULT_TAIL_RANGE: [number, number] = [8, 35];
 const DEFAULT_DEPTH_DIM = 0.3;
+const DEFAULT_BLOOM_ENABLED = true;
+const DEFAULT_BLOOM_THRESHOLD = 0.8;
+const DEFAULT_BLOOM_INTENSITY = 1.5;
 const DPR = window.devicePixelRatio || 1;
 
 function App() {
@@ -43,6 +46,9 @@ function App() {
   const [speedRange, setSpeedRange] = useState<[number, number]>(DEFAULT_SPEED_RANGE);
   const [tailRange, setTailRange] = useState<[number, number]>(DEFAULT_TAIL_RANGE);
   const [depthDim, setDepthDim] = useState(DEFAULT_DEPTH_DIM);
+  const [bloomEnabled, setBloomEnabled] = useState(DEFAULT_BLOOM_ENABLED);
+  const [bloomThreshold, setBloomThreshold] = useState(DEFAULT_BLOOM_THRESHOLD);
+  const [bloomIntensity, setBloomIntensity] = useState(DEFAULT_BLOOM_INTENSITY);
 
   const isAtlasDebug = renderMode === 'atlas-debug';
 
@@ -60,6 +66,9 @@ function App() {
     speedRange,
     tailRange,
     depthDim,
+    bloomEnabled,
+    bloomThreshold,
+    bloomIntensity,
   });
 
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
@@ -97,6 +106,9 @@ function App() {
         speedRange={speedRange}
         tailRange={tailRange}
         depthDim={depthDim}
+        bloomEnabled={bloomEnabled}
+        bloomThreshold={bloomThreshold}
+        bloomIntensity={bloomIntensity}
         onDensityChange={setDensity}
         onStepRateChange={setStepRate}
         onFontSizeChange={setFontSize}
@@ -104,6 +116,9 @@ function App() {
         onSpeedRangeChange={setSpeedRange}
         onTailRangeChange={setTailRange}
         onDepthDimChange={setDepthDim}
+        onBloomEnabledChange={setBloomEnabled}
+        onBloomThresholdChange={setBloomThreshold}
+        onBloomIntensityChange={setBloomIntensity}
         onRegenerate={regenerate}
       />
     </div>
