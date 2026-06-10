@@ -323,37 +323,47 @@ src/
 
 ---
 
-## Chunk 5: Milestone 5 — Parallax (variable speed + depth)
+## Chunk 5: Milestone 5 — Parallax + variable tail length
 
-**Purpose:** Per-column speed is randomized at init; `depth` correlates to speed; render dims and slightly blurs slower (= farther) columns. Fake parallax.
+**Purpose:** Per-column **speed**, **depth**, and **tailLength** all randomized at init. `depth` correlates with `speed` (faster = closer = brighter). `tailLength` is **independent** of speed for v1 (re-evaluate at M5 close — the film shows both correlated and uncorrelated tails). Render dims and slightly blurs slower (= farther) columns. Together: fake parallax + film-faithful tail variety.
+
+**Why tailLength here:** added during M4 close-out review (memory `[[project-current-progress]]`). The schema already supports per-column `tailLength: d.f32` since M2 — we just initialized to a constant. M5 is the natural milestone to switch it on since we're already rewriting `initialColumns()` for speed/depth.
 
 **Files:**
-- Modify: `src/lib/gpu/render-graph.ts` (init logic)
+- Modify: `src/lib/gpu/render-graph.ts` (init logic — speed, depth, tailLength all randomized)
 - Modify: `src/lib/gpu/pipelines/render-glyphs.ts` (depth-dim, slight blur)
-- Modify: `src/lib/types.ts` (add `ParallaxOptions`)
+- Modify: `src/lib/types.ts` (add `ParallaxOptions` — includes `speedRange`, `tailLengthRange`, `depthDim`)
 - Modify: `src/lib/matrix-rain.tsx` (or scaffold a real component now — pair-coding decision)
-- Modify: `src/demo/debug-panel.tsx` (enable parallax toggle + speedRange + depthDim sliders)
+- Modify: `src/demo/debug-panel.tsx` (enable parallax toggle + speedRange + tailLengthRange + depthDim sliders)
 
-### Task 5.1: Per-column speed + depth at init
+### Task 5.1: Per-column speed + depth + tailLength at init
 
-- [ ] **Step 1:** In `render-graph.ts` column init: `speed = lerp(speedRange[0], speedRange[1], randf.sample())`, `depth = (speed - speedRange[0]) / (speedRange[1] - speedRange[0])`. Frozen for the column's life (per spec §4.1).
-- [ ] **Step 2:** Commit: `feat(m5): per-column speed + depth at init`
+- [ ] **Step 1:** In `render-graph.ts` column init:
+  - `speed = lerp(speedRange[0], speedRange[1], Math.random())`
+  - `depth = (speed - speedRange[0]) / (speedRange[1] - speedRange[0])` (derived, in [0,1])
+  - `tailLength = lerp(tailLengthRange[0], tailLengthRange[1], Math.random())` (**independent** roll, not correlated with speed)
+  - All three frozen for the column's life (per spec §4.1).
+  - Suggested defaults: `speedRange = [0.4, 1.4]`, `tailLengthRange = [8, 22]`, `depthDim = 0.6`.
+- [ ] **Step 2:** Verify visually: columns clearly differ in fall speed AND tail length. Regenerate-seeds should reshuffle both.
+- [ ] **Step 3:** Commit: `feat(m5): per-column speed + depth + tailLength at init`
 
 ### Task 5.2: Depth-modulated rendering
 
-- [ ] **Step 1:** In the fragment shader: multiply brightness by `mix(1.0 - depthDim, 1.0, depth)` so depth=0 (slowest) is dimmer. For "blur": cheap approximation — sample the SDF with a slightly larger smoothstep band when `depth` is low, making the glyph soft.
+- [ ] **Step 1:** In the fragment shader: multiply brightness by `mix(1.0 - depthDim, 1.0, depth)` so depth=0 (slowest) is dimmer. For "blur": cheap approximation — sample the SDF with a slightly larger smoothstep band when `depth` is low, making the glyph soft. *(Note: `depthDimming` already exists from M4 keyed on `column.depth` — this step replaces the M4 `MIN_DEPTH_BRIGHTNESS` constant with a uniform-driven `depthDim` slider value.)*
 - [ ] **Step 2:** Commit: `feat(m5): depth-modulated brightness + soft glyphs for far columns`
 
 ### Task 5.3: Debug-panel controls + wire `glyphs-parallax` render mode
 
-- [ ] **Step 1:** Enable parallax toggle (when off, force all columns to speed=1, depth=1), speedRange dual-slider, depthDim slider.
+- [ ] **Step 1:** Enable parallax toggle (when off, force all columns to speed=1, depth=1, tailLength=DEFAULT — i.e. uniform), speedRange dual-slider, tailLengthRange dual-slider, depthDim slider.
 - [ ] **Step 2:** Wire the `glyphs-parallax` entry in the render-mode selector to enable the parallax shader path (the entry was already added in Chunk 0; this hooks the renderer to it).
 - [ ] **Step 3:** Commit: `feat(demo): m5 parallax controls + glyphs-parallax mode`
 
 **Chunk 5 verification:**
 - [ ] Columns visibly fall at different speeds.
+- [ ] Columns visibly have different tail lengths.
 - [ ] Slower columns are dimmer and slightly softer-edged.
-- [ ] Toggling parallax off gives uniform speed/brightness.
+- [ ] Toggling parallax off gives uniform speed / brightness / tail length.
+- [ ] **Decision point:** evaluate whether `tailLength` should weakly correlate with `speed` (film looks like "fast = long streamer" dominates). If yes, change Task 5.1 Step 1 to `tailLength = lerp(tailLengthRange[0], tailLengthRange[1], 0.5 * Math.random() + 0.5 * speedNormalized)` and document.
 - [ ] Tag: `git tag 0.5.0`
 
 ---
