@@ -3,6 +3,9 @@ import { useRoot } from '@typegpu/react';
 import { buildSdfAtlas, type SdfAtlas } from '../gpu/atlas/build-sdf-atlas';
 import { createRenderGraph, type RenderGraph } from '../gpu/render-graph';
 
+const DEFAULT_SPEED_RANGE: [number, number] = [0.4, 1.4];
+const DEFAULT_TAIL_RANGE: [number, number] = [8, 30];
+
 type UseMatrixRainRendererArgs = {
   ctxRef: RefObject<GPUCanvasContext | null>;
   cellSize: number;
@@ -65,6 +68,8 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
         cellSize: latestArgsRef.current.cellSize,
         density: latestArgsRef.current.density,
         stepRate: latestArgsRef.current.stepRate,
+        speedRange: DEFAULT_SPEED_RANGE,
+        tailRange: DEFAULT_TAIL_RANGE,
       });
     }
     const graph = graphRef.current;

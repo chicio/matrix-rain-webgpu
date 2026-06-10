@@ -20,6 +20,8 @@ export type CreateRenderGraphArgs = {
   cellSize: number;
   density: number;
   stepRate: number;
+  speedRange: [number, number];
+  tailRange: [number, number];
 };
 
 export type RenderGraph = {
@@ -37,23 +39,34 @@ export type RenderGraph = {
 
 type ColumnsBuffer = TgpuMutable<d.WgslArray<typeof Column>>;
 
-const INITIAL_SPEED = 1.0;
-const INITIAL_DEPTH = 1.0;
-const INITIAL_TAIL_LENGTH = 15.0;
-
-function initialColumns(count: number, viewportHeight: number, cellSize: number) {
+function initialColumns(
+  count: number,
+  viewportHeight: number,
+  cellSize: number,
+  speedRange: [number, number],
+  tailRange: [number, number],
+) {
   const rowCount = Math.max(1, Math.floor(viewportHeight / cellSize));
-  return Array.from({ length: count }, () => ({
-    headY: Math.random() * 2 * rowCount - rowCount, // uniform in [-rowCount, +rowCount]
-    speed: INITIAL_SPEED,
-    depth: INITIAL_DEPTH,
-    tailLength: INITIAL_TAIL_LENGTH,
-    seed: Math.floor(Math.random() * 0xffffffff),
-  }));
+  const [minSpeed, maxSpeed] = speedRange;
+  const [tailStart, tailEnd] = tailRange;
+
+  return Array.from({ length: count }, () => {
+    const speed = minSpeed + (maxSpeed - minSpeed) * Math.random();
+    const depth = (speed - minSpeed) / (maxSpeed - minSpeed);
+    const tailLength = tailStart + (tailEnd - tailStart) * Math.random();
+
+    return {
+      headY: Math.random() * 2 * rowCount - rowCount, // uniform in [-rowCount, +rowCount]
+      speed,
+      depth,
+      tailLength,
+      seed: Math.floor(Math.random() * 0xffffffff),
+    };
+  });
 }
 
 export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
-  const { root, ctx, atlas, cellSize } = args;
+  const { root, ctx, atlas, cellSize, speedRange, tailRange } = args;
   let density = args.density;
   let stepRate = args.stepRate;
 
@@ -116,7 +129,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       columns?.buffer.destroy();
       columnCount = newCount;
       columns = root.createMutable(d.arrayOf(Column, columnCount));
-      columns.write(initialColumns(columnCount, h, cellSize));
+      columns.write(initialColumns(columnCount, h, cellSize, speedRange, tailRange));
       computePipeline = createComputeStepPipeline(root, columns, uniforms);
       renderPipeline = createRenderGlyphsPipeline(root, columns, uniforms);
     }
@@ -127,7 +140,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     if (!columns) {
       return;
     }
-    columns.write(initialColumns(columnCount, viewportHeight, cellSize));
+    columns.write(initialColumns(columnCount, viewportHeight, cellSize, speedRange, tailRange));
   }
 
   function step(deltaSeconds: number, elapsedSeconds: number) {
