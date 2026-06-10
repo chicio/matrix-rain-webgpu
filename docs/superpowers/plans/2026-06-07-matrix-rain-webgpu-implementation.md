@@ -380,38 +380,41 @@ src/
 - Modify: `src/demo/debug-panel.tsx` (enable bloom toggle + intensity + threshold)
 - Add (probably): import from `@typegpu/color` for linear/sRGB
 
+**NOTE (M6):** bloom is wired as a **panel-toggle post-process layer** on top of the rain (per the M5.3 render-mode collapse), *not* a `glyphs-bloom` render mode. The temp blit from 6.1–6.3 acted as a debug viewport, removed in 6.4.
+
 ### Task 6.1: HDR offscreen target + render path change
 
-- [ ] **Step 1:** Create an `rgba16float` texture matching the canvas pixel size. M4's glyph render now draws into this target instead of directly into the swap chain.
-- [ ] **Step 2:** Add a passthrough blit shader that copies HDR → swap chain (with linear → sRGB tone-map if needed via `@typegpu/color`). This lets us land the HDR plumbing without bloom logic yet.
-- [ ] **Step 3:** Verify visually: no regression vs M5.
-- [ ] **Step 4:** Commit: `feat(m6): HDR offscreen target + passthrough blit`
+- [x] **Step 1:** Create an `rgba16float` texture matching the canvas pixel size. The glyph render now draws into this target instead of directly into the swap chain. *(HDR target recreated on canvas resize via `createRenderTarget`.)*
+- [x] **Step 2:** Add a passthrough blit shader (`blit.ts`) that copies HDR → swap chain. *(No tone-map needed yet — values still in [0,1]; straight copy.)*
+- [x] **Step 3:** Verified — no regression vs M5. **Gotcha learned:** a pipeline's color-target format is baked at creation (TypeGPU defaults to the swap-chain format), so the glyph pipeline needed an explicit `targets: { format: HDR_FORMAT }` once it drew into the float texture.
+- [x] **Step 4:** Commit: `7cceb59 feat(m6): HDR offscreen target + passthrough blit`
 
 ### Task 6.2: Brightness extract pass
 
-- [ ] **Step 1:** New pass reading HDR target; output to a 1/2 or 1/4 resolution texture; fragment: `max(rgb - threshold, 0)`.
-- [ ] **Step 2:** Commit: `feat(m6): bloom brightness-extract pass`
+- [x] **Step 1:** Extract pass (`bloom.ts`) reads the HDR target, outputs `max(rgb - bloomThreshold, 0)` to a **half-res** `rgba16float` target. Added `bloomThreshold`/`bloomIntensity` to `Uniforms`.
+- [x] **Step 2:** Commit: `575cc9d feat(m6): bloom brightness-extract pass`
 
 ### Task 6.3: Separable Gaussian blur (ping-pong)
 
-- [ ] **Step 1:** Create two textures of same size as the extracted-brightness target. Write a horizontal blur shader (9-tap or 13-tap Gaussian); then a vertical blur shader reading the result. Two dispatches per blur; chain 2–4 levels of progressively smaller textures for nicer bloom.
-- [ ] **Step 2:** Pair-coding: walk through the kernel weights together. Reference: standard Gaussian σ choice for our pixel radius.
-- [ ] **Step 3:** Commit: `feat(m6): separable Gaussian blur (ping-pong)`
+- [x] **Step 1:** Two half-res targets (`blurTargetA`/`B`); `createBlurPipeline` with a baked direction does a 9-tap Gaussian, run horizontal (extract→A) then vertical (A→B).
+- [x] **Step 2:** Walked through the normalized 9-tap kernel `0.227/0.195/0.122/0.054/0.016` (weights sum to 1). **Gotcha learned:** GPU resource handles (textures/samplers) can't be bound to local `const`s in TGSL — reference them inline at each `textureSample`.
+- [x] **Step 3:** Commit: `efe8db7 feat(m6): separable Gaussian blur (ping-pong)`
 
-### Task 6.4: Additive combine + intensity + wire `glyphs-bloom` render mode
+### Task 6.4: Additive combine + intensity + bloom toggle
 
-- [ ] **Step 1:** Final bloom pass: sample bloom texture(s), `outColor = hdrSample + intensity * bloomSum`, then blit to swap chain.
-- [ ] **Step 2:** Wire the `bloom` toggle, `intensity` and `threshold` sliders in debug panel.
-- [ ] **Step 3:** Wire the `glyphs-bloom` entry in the render-mode selector to enable the bloom passes (entry already added in Chunk 0).
-- [ ] **Step 4:** Commit: `feat(m6): bloom combine + glyphs-bloom mode + debug controls`
+- [x] **Step 1:** Combine pass samples the full-bright scene + blurred bloom (`combineBindings`, two textures) → `scene + bloomIntensity * bloom` → swap chain.
+- [x] **Step 2:** Wired the `bloom` toggle + `intensity` + `threshold` sliders. `render()` branches on `bloomEnabled` — off skips the chain and uses the plain blit.
+- [x] ~~**Step 3:** Wire the `glyphs-bloom` render mode~~ — **N/A:** bloom is a panel layer, not a render mode (see M6 note above). Bloom group's "wired in M6" tag removed.
+- [x] **Step 4:** Commit: `7904773 feat(m6): bloom combine + toggle + debug controls`
 
 **Chunk 6 verification:**
-- [ ] Bright head characters visibly glow into adjacent pixels.
-- [ ] `bloom={false}` (toggle) removes the glow entirely; FPS rises measurably.
-- [ ] Intensity / threshold sliders have the expected effect.
-- [ ] No console errors, no validation errors when toggling.
-- [ ] FPS readout — note the cost; compare with M5 baseline.
+- [x] Bright head characters visibly glow into adjacent pixels.
+- [x] `bloom` toggle off removes the glow; FPS rises (chain skipped).
+- [x] Intensity / threshold sliders have the expected effect.
+- [x] No console/validation errors when toggling.
+- [x] FPS readout noted (~120 with bloom on at the test resolution).
 - [ ] Tag: `git tag 0.6.0`
+- **Possible future tuning:** head pixels currently clamp at brightness 1.0, so bloom is modest; letting heads exceed 1.0 (true HDR emission) would give punchier glow. Deferred.
 
 ---
 
