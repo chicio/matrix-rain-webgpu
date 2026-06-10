@@ -31,21 +31,35 @@ export function createExtractPipeline(
 
 export type ExtractPipeline = ReturnType<typeof createExtractPipeline>;
 
+// Gaussian g(x) = e^(−x²/2σ²) sampled at offsets 0..radius, then normalized so
+// the full symmetric kernel (center once + each side twice) sums to 1.
+const BLUR_SIGMA = 1.8;
+
+function gaussianWeights(sigma: number, radius: number): number[] {
+  const raw: number[] = [];
+  for (let i = 0; i <= radius; i++) {
+    raw.push(Math.exp(-(i * i) / (2 * sigma * sigma)));
+  }
+  const total = raw[0] + 2 * raw.slice(1).reduce((sum, w) => sum + w, 0);
+  return raw.map((w) => w / total);
+}
+
 export function createBlurPipeline(
   root: TgpuRoot,
   uniforms: TgpuUniform<typeof Uniforms>,
   format: GPUTextureFormat,
   direction: readonly [number, number],
 ) {
+  const [w0, w1, w2, w3, w4] = gaussianWeights(BLUR_SIGMA, 4);
+
   const fragMain = tgpu.fragmentFn({
     in: { uv: d.vec2f },
     out: d.vec4f,
   })(({ uv }) => {
     'use gpu';
 
-    // One texel of the half-res source, in UV space, stepped along the blur axis only.
-    const texel = d.vec2f(2, 2) / uniforms.$.resolution;
-    const step = d.vec2f(direction[0], direction[1]) * texel;
+    const texelDimension = d.vec2f(2, 2) / uniforms.$.resolution;
+    const step = d.vec2f(direction[0], direction[1]) * texelDimension;
 
     const c = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv).rgb;
     const p1 = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv + step).rgb;
@@ -81,12 +95,7 @@ export function createBlurPipeline(
       uv - step * 4.0,
     ).rgb;
 
-    const blurred =
-      c * 0.227027 +
-      (p1 + n1) * 0.1945946 +
-      (p2 + n2) * 0.1216216 +
-      (p3 + n3) * 0.054054 +
-      (p4 + n4) * 0.016216;
+    const blurred = c * w0 + (p1 + n1) * w1 + (p2 + n2) * w2 + (p3 + n3) * w3 + (p4 + n4) * w4;
 
     return d.vec4f(blurred, 1);
   });
