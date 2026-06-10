@@ -13,6 +13,7 @@ import {
   type RenderAtlasDebugPipeline,
 } from './pipelines/render-atlas-debug';
 import { blitBindings, createBlitPipeline, type BlitPipeline } from './pipelines/blit';
+import { createExtractPipeline, type ExtractPipeline } from './pipelines/bloom';
 
 const HDR_FORMAT: GPUTextureFormat = 'rgba16float';
 
@@ -93,6 +94,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     scrollVelocity: 0,
     flags: 0,
     atlasLayer: 0,
+    bloomThreshold: 0.8,
+    bloomIntensity: 1,
   });
 
   const atlasTexture = root
@@ -133,6 +136,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     uniforms,
   );
   const blitPipeline: BlitPipeline = createBlitPipeline(root);
+  const extractPipeline: ExtractPipeline = createExtractPipeline(root, uniforms, HDR_FORMAT);
 
   let columns: ColumnsBuffer | null = null;
   let computePipeline: ComputeStepPipeline | null = null;
@@ -141,7 +145,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   let viewportHeight = 0;
   let stepAccumulator = 0;
 
-  function createHdrTarget(width: number, height: number) {
+  function createRenderTarget(width: number, height: number) {
     const texture = root
       .createTexture({ size: [width, height], format: HDR_FORMAT })
       .$usage('sampled', 'render');
@@ -152,7 +156,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     return { texture, bindGroup };
   }
 
-  let hdrTarget: ReturnType<typeof createHdrTarget> | null = null;
+  let hdrTarget: ReturnType<typeof createRenderTarget> | null = null;
+  let extractTarget: ReturnType<typeof createRenderTarget> | null = null;
   let lastWidth = 0;
   let lastHeight = 0;
 
@@ -171,7 +176,12 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       lastWidth = w;
       lastHeight = h;
       hdrTarget?.texture.destroy();
-      hdrTarget = createHdrTarget(w, h);
+      hdrTarget = createRenderTarget(w, h);
+      extractTarget?.texture.destroy();
+      extractTarget = createRenderTarget(
+        Math.max(1, Math.floor(w / 2)),
+        Math.max(1, Math.floor(h / 2)),
+      );
     }
     uniforms.patch({ resolution: d.vec2f(w, h) });
   }
@@ -198,11 +208,18 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   }
 
   function render() {
-    if (!renderPipeline || !hdrTarget) {
+    if (!renderPipeline || !hdrTarget || !extractTarget) {
       return;
     }
+    // Pass 1: glyphs → HDR target.
     renderPipeline.with(atlasBindGroup).withColorAttachment({ view: hdrTarget.texture }).draw(3);
-    blitPipeline.with(hdrTarget.bindGroup).withColorAttachment({ view: ctx }).draw(3);
+    // Pass 2: bright-pass extract HDR → half-res extract target.
+    extractPipeline
+      .with(hdrTarget.bindGroup)
+      .withColorAttachment({ view: extractTarget.texture })
+      .draw(3);
+    // TEMP (revert in 6.4): blit the EXTRACT target so we can see the bright-pass.
+    blitPipeline.with(extractTarget.bindGroup).withColorAttachment({ view: ctx }).draw(3);
   }
 
   function renderAtlasDebug() {
@@ -241,6 +258,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     renderPipeline = null;
     hdrTarget?.texture.destroy();
     hdrTarget = null;
+    extractTarget?.texture.destroy();
+    extractTarget = null;
   }
 
   function getColumnCount() {

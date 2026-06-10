@@ -20,4 +20,6 @@ export const Uniforms = d.struct({
   scrollVelocity: d.f32,
   flags: d.u32,
   atlasLayer: d.u32,
+  bloomThreshold: d.f32,
+  bloomIntensity: d.f32,
 });
