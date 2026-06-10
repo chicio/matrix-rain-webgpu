@@ -12,6 +12,9 @@ import {
   createRenderAtlasDebugPipeline,
   type RenderAtlasDebugPipeline,
 } from './pipelines/render-atlas-debug';
+import { blitBindings, createBlitPipeline, type BlitPipeline } from './pipelines/blit';
+
+const HDR_FORMAT: GPUTextureFormat = 'rgba16float';
 
 export type CreateRenderGraphArgs = {
   root: TgpuRoot;
@@ -105,6 +108,12 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     addressModeU: 'clamp-to-edge',
     addressModeV: 'clamp-to-edge',
   });
+  const blitSampler = root.createSampler({
+    magFilter: 'linear',
+    minFilter: 'linear',
+    addressModeU: 'clamp-to-edge',
+    addressModeV: 'clamp-to-edge',
+  });
 
   // root.unwrap() forces GPU materialization so writeTexture has a real GPUTexture target.
   root.device.queue.writeTexture(
@@ -123,6 +132,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     root,
     uniforms,
   );
+  const blitPipeline: BlitPipeline = createBlitPipeline(root);
 
   let columns: ColumnsBuffer | null = null;
   let computePipeline: ComputeStepPipeline | null = null;
@@ -130,6 +140,21 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   let columnCount = 0;
   let viewportHeight = 0;
   let stepAccumulator = 0;
+
+  function createHdrTarget(width: number, height: number) {
+    const texture = root
+      .createTexture({ size: [width, height], format: HDR_FORMAT })
+      .$usage('sampled', 'render');
+    const bindGroup = root.createBindGroup(blitBindings, {
+      source: texture.createView(d.texture2d(d.f32)),
+      sampler: blitSampler,
+    });
+    return { texture, bindGroup };
+  }
+
+  let hdrTarget: ReturnType<typeof createHdrTarget> | null = null;
+  let lastWidth = 0;
+  let lastHeight = 0;
 
   function resize(w: number, h: number) {
     viewportHeight = h;
@@ -140,7 +165,13 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       columns = root.createMutable(d.arrayOf(Column, columnCount));
       columns.write(initialColumns(columnCount, h, cellSize, speedRange, tailRange));
       computePipeline = createComputeStepPipeline(root, columns, uniforms);
-      renderPipeline = createRenderGlyphsPipeline(root, columns, uniforms);
+      renderPipeline = createRenderGlyphsPipeline(root, columns, uniforms, HDR_FORMAT);
+    }
+    if (w !== lastWidth || h !== lastHeight) {
+      lastWidth = w;
+      lastHeight = h;
+      hdrTarget?.texture.destroy();
+      hdrTarget = createHdrTarget(w, h);
     }
     uniforms.patch({ resolution: d.vec2f(w, h) });
   }
@@ -167,10 +198,11 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   }
 
   function render() {
-    if (!renderPipeline) {
+    if (!renderPipeline || !hdrTarget) {
       return;
     }
-    renderPipeline.with(atlasBindGroup).withColorAttachment({ view: ctx }).draw(3);
+    renderPipeline.with(atlasBindGroup).withColorAttachment({ view: hdrTarget.texture }).draw(3);
+    blitPipeline.with(hdrTarget.bindGroup).withColorAttachment({ view: ctx }).draw(3);
   }
 
   function renderAtlasDebug() {
@@ -207,6 +239,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     columns = null;
     computePipeline = null;
     renderPipeline = null;
+    hdrTarget?.texture.destroy();
+    hdrTarget = null;
   }
 
   function getColumnCount() {

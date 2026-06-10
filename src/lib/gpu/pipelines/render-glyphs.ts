@@ -13,6 +13,7 @@ export function createRenderGlyphsPipeline(
   root: TgpuRoot,
   columns: TgpuMutable<d.WgslArray<typeof Column>>,
   uniforms: TgpuUniform<typeof Uniforms>,
+  format: GPUTextureFormat,
 ) {
   const fragMain = tgpu.fragmentFn({
     in: { uv: d.vec2f },
@@ -72,6 +73,7 @@ export function createRenderGlyphsPipeline(
   return root.createRenderPipeline({
     vertex: common.fullScreenTriangle,
     fragment: fragMain,
+    targets: { format },
   });
 }
 
