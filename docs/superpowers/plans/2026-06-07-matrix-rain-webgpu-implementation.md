@@ -338,32 +338,34 @@ src/
 
 ### Task 5.1: Per-column speed + depth + tailLength at init
 
-- [ ] **Step 1:** In `render-graph.ts` column init:
+- [x] **Step 1:** In `render-graph.ts` column init:
   - `speed = lerp(speedRange[0], speedRange[1], Math.random())`
   - `depth = (speed - speedRange[0]) / (speedRange[1] - speedRange[0])` (derived, in [0,1])
   - `tailLength = lerp(tailLengthRange[0], tailLengthRange[1], Math.random())` (**independent** roll, not correlated with speed)
   - All three frozen for the column's life (per spec §4.1).
-  - Suggested defaults: `speedRange = [0.4, 1.4]`, `tailLengthRange = [8, 22]`, `depthDim = 0.6`.
-- [ ] **Step 2:** Verify visually: columns clearly differ in fall speed AND tail length. Regenerate-seeds should reshuffle both.
-- [ ] **Step 3:** Commit: `feat(m5): per-column speed + depth + tailLength at init`
+  - Suggested defaults: `speedRange = [0.4, 1.4]`, `tailLengthRange = [8, 22]`, `depthDim = 0.6`. *(Shipped defaults later tuned by hand: `speedRange = [0.4, 1.5]`, `tailRange = [8, 35]`, `density = 0.95`.)* `speedRange`/`tailRange` thread through `CreateRenderGraphArgs`; depth uses a span-guard (`span > 0 ? … : 1`) so a collapsed range (min===max via slider) yields depth=1 instead of NaN.
+- [x] **Step 2:** Verify visually: columns clearly differ in fall speed AND tail length. Regenerate-seeds should reshuffle both. *(Confirmed in-browser.)*
+- [x] **Step 3:** Commit: `5c9bf1a feat(m5): per-column speed + depth + tailLength at init`
 
 ### Task 5.2: Depth-modulated rendering
 
-- [ ] **Step 1:** In the fragment shader: multiply brightness by `mix(1.0 - depthDim, 1.0, depth)` so depth=0 (slowest) is dimmer. For "blur": cheap approximation — sample the SDF with a slightly larger smoothstep band when `depth` is low, making the glyph soft. *(Note: `depthDimming` already exists from M4 keyed on `column.depth` — this step replaces the M4 `MIN_DEPTH_BRIGHTNESS` constant with a uniform-driven `depthDim` slider value.)*
-- [ ] **Step 2:** Commit: `feat(m5): depth-modulated brightness + soft glyphs for far columns`
+- [x] **Step 1:** In the fragment shader: multiply brightness by `mix(1.0 - depthDim, 1.0, depth)` so depth=0 (slowest) is dimmer. For "blur": cheap approximation — sample the SDF with a slightly larger smoothstep band when `depth` is low, making the glyph soft. *(Note: `depthDimming` already exists from M4 keyed on `column.depth` — this step replaces the M4 `MIN_DEPTH_BRIGHTNESS` constant with a uniform-driven `depthDim` slider value.)* **Done:** `depthDim` is now a `Uniforms` field (default 0.6); far columns widen the edge band by `FAR_SOFTNESS = 2.5`. Also nudged head color slightly greener.
+- [x] **Step 2:** Commit: `fcacf26 feat(m5): depth-modulated brightness + soft glyphs for far columns`
 
-### Task 5.3: Debug-panel controls + wire `glyphs-parallax` render mode
+### Task 5.3: Demo controls + render-mode simplification
 
-- [ ] **Step 1:** Enable parallax toggle (when off, force all columns to speed=1, depth=1, tailLength=DEFAULT — i.e. uniform), speedRange dual-slider, tailLengthRange dual-slider, depthDim slider.
-- [ ] **Step 2:** Wire the `glyphs-parallax` entry in the render-mode selector to enable the parallax shader path (the entry was already added in Chunk 0; this hooks the renderer to it).
-- [ ] **Step 3:** Commit: `feat(demo): m5 parallax controls + glyphs-parallax mode`
+**SCOPE CHANGE (user, M5.3):** parallax is intrinsic to the matrix rain, not an option — so the planned parallax *toggle* and the flat/varied A-B switch were dropped. The render-mode list was also collapsed.
+
+- [x] **Step 1:** Parallax group exposes its params directly — speed min/max dual-slider, tail min/max dual-slider, depthDim slider — always interactive, changes auto-regenerate columns. *(No toggle; no forced-uniform path. `Toggle` component kept controllable for future Bloom/CRT/etc. groups.)*
+- [x] **Step 2:** Render modes collapsed from six to two: **`matrix-rain`** (default, fully panel-customized) and **`atlas-debug`**. The old `state-debug` / `glyphs-flat` / `glyphs-parallax` / `glyphs-bloom` / `glyphs-crt` entries are gone; future effects (bloom, CRT, interaction) become **panel layers**, not render modes. The dead M1 time-gradient render path was removed from `App.tsx`. `Group.milestone` is now optional and dropped once a group is wired on (Simulation, Parallax stripped). **Convention:** each future milestone removes its own group's "wired in M…" tag when it activates the group.
+- [x] **Step 3:** Commit: `6e21a68 feat(m5): parallax controls + simplified render modes`
 
 **Chunk 5 verification:**
-- [ ] Columns visibly fall at different speeds.
-- [ ] Columns visibly have different tail lengths.
-- [ ] Slower columns are dimmer and slightly softer-edged.
-- [ ] Toggling parallax off gives uniform speed / brightness / tail length.
-- [ ] **Decision point:** evaluate whether `tailLength` should weakly correlate with `speed` (film looks like "fast = long streamer" dominates). If yes, change Task 5.1 Step 1 to `tailLength = lerp(tailLengthRange[0], tailLengthRange[1], 0.5 * Math.random() + 0.5 * speedNormalized)` and document.
+- [x] Columns visibly fall at different speeds.
+- [x] Columns visibly have different tail lengths.
+- [x] Slower columns are dimmer and slightly softer-edged.
+- [x] ~~Toggling parallax off gives uniform~~ — N/A after scope change (no toggle). Equivalent check: collapsing the speed slider (min=max) yields uniform speed/depth, columns stay visible via the span-guard.
+- [x] **Decision point:** evaluate whether `tailLength` should weakly correlate with `speed`. **DECIDED: keep independent** — maximum variety, matches the look the user tuned to. (Correlated formula `lerp(min, max, 0.5*rand + 0.5*depth)` left documented here if revisited.)
 - [ ] Tag: `git tag 0.5.0`
 
 ---
