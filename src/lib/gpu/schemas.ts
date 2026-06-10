@@ -14,6 +14,7 @@ export const Uniforms = d.struct({
   resolution: d.vec2f,
   cellSize: d.f32,
   density: d.f32,
+  depthDim: d.f32,
   mousePosition: d.vec2f,
   mouseStrength: d.f32,
   scrollVelocity: d.f32,

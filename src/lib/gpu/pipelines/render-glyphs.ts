@@ -6,9 +6,8 @@ import { Column, Uniforms } from '../schemas';
 
 // Falloff exponent — steeper than linear keeps the head visually bright longer.
 const FALLOFF_POWER = 1.5;
-// Minimum brightness multiplier for the farthest column (depth = 0). M5 will
-// vary depth per column; M4 has depth = 1 for all, so this is a no-op for now.
-const MIN_DEPTH_BRIGHTNESS = 0.3;
+// Far columns (depth→0) get a wider SDF edge band, blurring them; near columns stay crisp.
+const FAR_SOFTNESS = 2.5;
 
 export function createRenderGlyphsPipeline(
   root: TgpuRoot,
@@ -43,12 +42,14 @@ export function createRenderGlyphsPipeline(
       localUv,
       d.i32(layer),
     );
-    const edgeHalfBand = std.fwidth(localUv.x) * 0.5;
+
+    const softness = std.mix(FAR_SOFTNESS, 1, column.depth);
+    const edgeHalfBand = std.fwidth(localUv.x) * 0.5 * softness;
     const coverage = std.smoothstep(0.5 - edgeHalfBand, 0.5 + edgeHalfBand, sample.x);
 
     const tailProgress = d.f32(k) / column.tailLength;
     const tailFalloff = std.pow(std.clamp(1 - tailProgress, 0, 1), FALLOFF_POWER);
-    const depthDimming = std.mix(MIN_DEPTH_BRIGHTNESS, 1, column.depth);
+    const depthDimming = std.mix(1 - uniforms.$.depthDim, 1, column.depth);
     // Per-cell ±20% variation so neighbours in the same trail position differ
     // slightly — film-faithful organic feel. Head stays uniformly bright.
     const trailJitter = std.select(brightnessJitter(column.seed, row), d.f32(0), k === 0);

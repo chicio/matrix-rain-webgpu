@@ -76,6 +76,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     resolution: d.vec2f(0, 0),
     cellSize,
     density,
+    depthDim: 0.6,
     mousePosition: d.vec2f(0, 0),
     mouseStrength: 0,
     scrollVelocity: 0,
