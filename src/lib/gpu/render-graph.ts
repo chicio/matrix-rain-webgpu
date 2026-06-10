@@ -14,6 +14,7 @@ import {
 } from './pipelines/render-atlas-debug';
 import { blitBindings, createBlitPipeline, type BlitPipeline } from './pipelines/blit';
 import { createExtractPipeline, type ExtractPipeline } from './pipelines/bloom';
+import { createBlurPipeline, type BlurPipeline } from './pipelines/bloom';
 
 const HDR_FORMAT: GPUTextureFormat = 'rgba16float';
 
@@ -137,6 +138,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   );
   const blitPipeline: BlitPipeline = createBlitPipeline(root);
   const extractPipeline: ExtractPipeline = createExtractPipeline(root, uniforms, HDR_FORMAT);
+  const blurHPipeline: BlurPipeline = createBlurPipeline(root, uniforms, HDR_FORMAT, [1, 0]);
+  const blurVPipeline: BlurPipeline = createBlurPipeline(root, uniforms, HDR_FORMAT, [0, 1]);
 
   let columns: ColumnsBuffer | null = null;
   let computePipeline: ComputeStepPipeline | null = null;
@@ -158,6 +161,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
 
   let hdrTarget: ReturnType<typeof createRenderTarget> | null = null;
   let extractTarget: ReturnType<typeof createRenderTarget> | null = null;
+  let blurTargetA: ReturnType<typeof createRenderTarget> | null = null;
+  let blurTargetB: ReturnType<typeof createRenderTarget> | null = null;
   let lastWidth = 0;
   let lastHeight = 0;
 
@@ -175,6 +180,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     if (w !== lastWidth || h !== lastHeight) {
       lastWidth = w;
       lastHeight = h;
+      const halfW = Math.max(1, Math.floor(w / 2));
+      const halfH = Math.max(1, Math.floor(h / 2));
       hdrTarget?.texture.destroy();
       hdrTarget = createRenderTarget(w, h);
       extractTarget?.texture.destroy();
@@ -182,6 +189,10 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
         Math.max(1, Math.floor(w / 2)),
         Math.max(1, Math.floor(h / 2)),
       );
+      blurTargetA?.texture.destroy();
+      blurTargetA = createRenderTarget(halfW, halfH);
+      blurTargetB?.texture.destroy();
+      blurTargetB = createRenderTarget(halfW, halfH);
     }
     uniforms.patch({ resolution: d.vec2f(w, h) });
   }
@@ -208,18 +219,28 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   }
 
   function render() {
-    if (!renderPipeline || !hdrTarget || !extractTarget) {
+    if (!renderPipeline || !hdrTarget || !extractTarget || !blurTargetA || !blurTargetB) {
       return;
     }
-    // Pass 1: glyphs → HDR target.
+    // 1: glyphs → HDR.
     renderPipeline.with(atlasBindGroup).withColorAttachment({ view: hdrTarget.texture }).draw(3);
-    // Pass 2: bright-pass extract HDR → half-res extract target.
+    // 2: bright-pass → extract (half-res).
     extractPipeline
       .with(hdrTarget.bindGroup)
       .withColorAttachment({ view: extractTarget.texture })
       .draw(3);
-    // TEMP (revert in 6.4): blit the EXTRACT target so we can see the bright-pass.
-    blitPipeline.with(extractTarget.bindGroup).withColorAttachment({ view: ctx }).draw(3);
+    // 3: blur horizontally → A.
+    blurHPipeline
+      .with(extractTarget.bindGroup)
+      .withColorAttachment({ view: blurTargetA.texture })
+      .draw(3);
+    // 4: blur vertically → B (final bloom).
+    blurVPipeline
+      .with(blurTargetA.bindGroup)
+      .withColorAttachment({ view: blurTargetB.texture })
+      .draw(3);
+    // TEMP (revert in 6.4): show the blurred bloom.
+    blitPipeline.with(blurTargetB.bindGroup).withColorAttachment({ view: ctx }).draw(3);
   }
 
   function renderAtlasDebug() {
@@ -260,6 +281,10 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     hdrTarget = null;
     extractTarget?.texture.destroy();
     extractTarget = null;
+    blurTargetA?.texture.destroy();
+    blurTargetA = null;
+    blurTargetB?.texture.destroy();
+    blurTargetB = null;
   }
 
   function getColumnCount() {

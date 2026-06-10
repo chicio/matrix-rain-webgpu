@@ -30,3 +30,72 @@ export function createExtractPipeline(
 }
 
 export type ExtractPipeline = ReturnType<typeof createExtractPipeline>;
+
+export function createBlurPipeline(
+  root: TgpuRoot,
+  uniforms: TgpuUniform<typeof Uniforms>,
+  format: GPUTextureFormat,
+  direction: readonly [number, number],
+) {
+  const fragMain = tgpu.fragmentFn({
+    in: { uv: d.vec2f },
+    out: d.vec4f,
+  })(({ uv }) => {
+    'use gpu';
+
+    // One texel of the half-res source, in UV space, stepped along the blur axis only.
+    const texel = d.vec2f(2, 2) / uniforms.$.resolution;
+    const step = d.vec2f(direction[0], direction[1]) * texel;
+
+    const c = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv).rgb;
+    const p1 = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv + step).rgb;
+    const n1 = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv - step).rgb;
+    const p2 = std.textureSample(
+      blitBindings.$.source,
+      blitBindings.$.sampler,
+      uv + step * 2.0,
+    ).rgb;
+    const n2 = std.textureSample(
+      blitBindings.$.source,
+      blitBindings.$.sampler,
+      uv - step * 2.0,
+    ).rgb;
+    const p3 = std.textureSample(
+      blitBindings.$.source,
+      blitBindings.$.sampler,
+      uv + step * 3.0,
+    ).rgb;
+    const n3 = std.textureSample(
+      blitBindings.$.source,
+      blitBindings.$.sampler,
+      uv - step * 3.0,
+    ).rgb;
+    const p4 = std.textureSample(
+      blitBindings.$.source,
+      blitBindings.$.sampler,
+      uv + step * 4.0,
+    ).rgb;
+    const n4 = std.textureSample(
+      blitBindings.$.source,
+      blitBindings.$.sampler,
+      uv - step * 4.0,
+    ).rgb;
+
+    const blurred =
+      c * 0.227027 +
+      (p1 + n1) * 0.1945946 +
+      (p2 + n2) * 0.1216216 +
+      (p3 + n3) * 0.054054 +
+      (p4 + n4) * 0.016216;
+
+    return d.vec4f(blurred, 1);
+  });
+
+  return root.createRenderPipeline({
+    vertex: common.fullScreenTriangle,
+    fragment: fragMain,
+    targets: { format },
+  });
+}
+
+export type BlurPipeline = ReturnType<typeof createBlurPipeline>;
