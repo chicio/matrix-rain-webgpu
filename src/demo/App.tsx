@@ -1,6 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { common, d, std } from 'typegpu';
-import { useConfigureContext, useFrame, useRoot, useUniform } from '@typegpu/react';
+import { useCallback, useRef, useState } from 'react';
+import { useConfigureContext, useFrame } from '@typegpu/react';
 
 import { GLYPH_COUNT } from '../lib/gpu/atlas/glyph-set';
 import { useMatrixRainRenderer } from '../lib/hooks/use-matrix-rain-renderer';
@@ -8,34 +7,20 @@ import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
 
 const DEFAULT_FONT_SIZE = 20;
-const DEFAULT_DENSITY = 0.96;
+const DEFAULT_DENSITY = 0.95;
 // 2D reference uses frameRate=20 but its low-alpha fade overlay softens
 // motion perceptually. Our crisp per-cell render needs ~half that rate to
 // feel comparable; 10 matches the 2D's perceived speed.
 const DEFAULT_STEP_RATE = 10;
+const DEFAULT_SPEED_RANGE: [number, number] = [0.4, 1.5];
+const DEFAULT_TAIL_RANGE: [number, number] = [8, 35];
+const DEFAULT_DEPTH_DIM = 0.3;
 const DPR = window.devicePixelRatio || 1;
 
 function App() {
-  const root = useRoot();
-  const time = useUniform(d.f32);
-
   const fpsRef = useRef(0);
   const lastFlushRef = useRef(0);
   const [fps, setFps] = useState<number | null>(null);
-
-  const renderPipeline = useMemo(
-    () =>
-      root.createRenderPipeline({
-        vertex: common.fullScreenTriangle,
-        fragment: () => {
-          'use gpu';
-
-          const k = std.sin(time.$ * 2.0) * 0.5 + 0.5;
-          return d.vec4f(0, k, 0, 1);
-        },
-      }),
-    [root, time],
-  );
 
   const { ref: configureRef, ctxRef } = useConfigureContext({
     autoResize: true,
@@ -50,15 +35,16 @@ function App() {
     [configureRef],
   );
 
-  const [renderMode, setRenderMode] = useState<RenderMode>('state-debug');
+  const [renderMode, setRenderMode] = useState<RenderMode>('matrix-rain');
   const [density, setDensity] = useState(DEFAULT_DENSITY);
   const [stepRate, setStepRate] = useState(DEFAULT_STEP_RATE);
   const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
   const [atlasLayer, setAtlasLayer] = useState(0);
+  const [speedRange, setSpeedRange] = useState<[number, number]>(DEFAULT_SPEED_RANGE);
+  const [tailRange, setTailRange] = useState<[number, number]>(DEFAULT_TAIL_RANGE);
+  const [depthDim, setDepthDim] = useState(DEFAULT_DEPTH_DIM);
 
   const isAtlasDebug = renderMode === 'atlas-debug';
-  const useRainRenderer =
-    renderMode === 'state-debug' || renderMode === 'glyphs-flat' || isAtlasDebug;
 
   const {
     tick: tickRain,
@@ -71,6 +57,9 @@ function App() {
     stepRate,
     atlasLayer,
     atlasDebug: isAtlasDebug,
+    speedRange,
+    tailRange,
+    depthDim,
   });
 
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
@@ -85,12 +74,7 @@ function App() {
       lastFlushRef.current = elapsedSeconds;
     }
 
-    if (useRainRenderer) {
-      tickRain(deltaSeconds, elapsedSeconds);
-    } else {
-      time.write(elapsedSeconds);
-      renderPipeline.withColorAttachment({ view: ctxRef.current }).draw(3);
-    }
+    tickRain(deltaSeconds, elapsedSeconds);
   });
 
   return (
@@ -110,10 +94,16 @@ function App() {
         atlasLayer={atlasLayer}
         atlasLayerMax={GLYPH_COUNT - 1}
         atlasDebugActive={isAtlasDebug}
+        speedRange={speedRange}
+        tailRange={tailRange}
+        depthDim={depthDim}
         onDensityChange={setDensity}
         onStepRateChange={setStepRate}
         onFontSizeChange={setFontSize}
         onAtlasLayerChange={setAtlasLayer}
+        onSpeedRangeChange={setSpeedRange}
+        onTailRangeChange={setTailRange}
+        onDepthDimChange={setDepthDim}
         onRegenerate={regenerate}
       />
     </div>

@@ -22,10 +22,16 @@ export type EffectsProps = {
   atlasLayer: number;
   atlasLayerMax: number;
   atlasDebugActive: boolean;
+  speedRange: [number, number];
+  tailRange: [number, number];
+  depthDim: number;
   onDensityChange: (value: number) => void;
   onStepRateChange: (value: number) => void;
   onFontSizeChange: (value: number) => void;
   onAtlasLayerChange: (value: number) => void;
+  onSpeedRangeChange: (value: [number, number]) => void;
+  onTailRangeChange: (value: [number, number]) => void;
+  onDepthDimChange: (value: number) => void;
   onRegenerate: () => void;
 };
 
@@ -36,17 +42,23 @@ export function Effects({
   atlasLayer,
   atlasLayerMax,
   atlasDebugActive,
+  speedRange,
+  tailRange,
+  depthDim,
   onDensityChange,
   onStepRateChange,
   onFontSizeChange,
   onAtlasLayerChange,
+  onSpeedRangeChange,
+  onTailRangeChange,
+  onDepthDimChange,
   onRegenerate,
 }: EffectsProps) {
   return (
     <div className="rail-section">
       <h3 className="rail-heading">Effects</h3>
 
-      <Group title="Simulation" milestone="wired in M2" disabled={false}>
+      <Group title="Simulation" disabled={false}>
         <Slider
           label="density"
           min={0}
@@ -74,7 +86,7 @@ export function Effects({
         <Button label="Regenerate seeds" onClick={onRegenerate} />
       </Group>
 
-      <Group title="Atlas debug" milestone="M3 diagnostic" disabled={!atlasDebugActive}>
+      <Group title="Atlas debug" milestone="diagnostic" disabled={!atlasDebugActive}>
         <Slider
           label="atlas layer"
           min={0}
@@ -85,11 +97,47 @@ export function Effects({
         />
       </Group>
 
-      <Group title="Parallax" milestone="wired in M5">
-        <Toggle label="parallax" />
-        <Slider label="speed min" min={0.1} max={2} step={0.1} value={0.5} />
-        <Slider label="speed max" min={0.1} max={2} step={0.1} value={1.5} />
-        <Slider label="depthDim" min={0} max={1} step={0.05} value={0.4} />
+      <Group title="Parallax" disabled={false}>
+        <Slider
+          label="speed min"
+          min={0.1}
+          max={2}
+          step={0.1}
+          value={speedRange[0]}
+          onChange={(value) => onSpeedRangeChange([value, speedRange[1]])}
+        />
+        <Slider
+          label="speed max"
+          min={0.1}
+          max={2}
+          step={0.1}
+          value={speedRange[1]}
+          onChange={(value) => onSpeedRangeChange([speedRange[0], value])}
+        />
+        <Slider
+          label="tail min"
+          min={2}
+          max={40}
+          step={1}
+          value={tailRange[0]}
+          onChange={(value) => onTailRangeChange([value, tailRange[1]])}
+        />
+        <Slider
+          label="tail max"
+          min={2}
+          max={40}
+          step={1}
+          value={tailRange[1]}
+          onChange={(value) => onTailRangeChange([tailRange[0], value])}
+        />
+        <Slider
+          label="depthDim"
+          min={0}
+          max={1}
+          step={0.05}
+          value={depthDim}
+          onChange={onDepthDimChange}
+        />
       </Group>
 
       <Group title="Bloom" milestone="wired in M6">

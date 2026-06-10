@@ -3,9 +3,6 @@ import { useRoot } from '@typegpu/react';
 import { buildSdfAtlas, type SdfAtlas } from '../gpu/atlas/build-sdf-atlas';
 import { createRenderGraph, type RenderGraph } from '../gpu/render-graph';
 
-const DEFAULT_SPEED_RANGE: [number, number] = [0.4, 1.4];
-const DEFAULT_TAIL_RANGE: [number, number] = [8, 30];
-
 type UseMatrixRainRendererArgs = {
   ctxRef: RefObject<GPUCanvasContext | null>;
   cellSize: number;
@@ -13,6 +10,9 @@ type UseMatrixRainRendererArgs = {
   stepRate: number;
   atlasLayer: number;
   atlasDebug: boolean;
+  speedRange: [number, number];
+  tailRange: [number, number];
+  depthDim: number;
 };
 
 export type MatrixRainRenderer = {
@@ -54,6 +54,20 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
     };
   }, [args.cellSize]);
 
+  // Speed/tail ranges only affect per-column init, so a change re-rolls all
+  // columns. Keyed on the primitive endpoints (not the array refs) so the
+  // effect fires exactly when a value moves, regardless of array identity.
+  useEffect(() => {
+    const graph = graphRef.current;
+    if (!graph) {
+      return;
+    }
+    graph.setSpeedRange(args.speedRange);
+    graph.setTailRange(args.tailRange);
+    graph.regenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [args.speedRange[0], args.speedRange[1], args.tailRange[0], args.tailRange[1]]);
+
   function tick(deltaSeconds: number, elapsedSeconds: number) {
     const ctx = latestArgsRef.current.ctxRef.current;
     const atlas = atlasRef.current;
@@ -68,8 +82,9 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
         cellSize: latestArgsRef.current.cellSize,
         density: latestArgsRef.current.density,
         stepRate: latestArgsRef.current.stepRate,
-        speedRange: DEFAULT_SPEED_RANGE,
-        tailRange: DEFAULT_TAIL_RANGE,
+        speedRange: latestArgsRef.current.speedRange,
+        tailRange: latestArgsRef.current.tailRange,
+        depthDim: latestArgsRef.current.depthDim,
       });
     }
     const graph = graphRef.current;
@@ -82,6 +97,7 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
     } else {
       graph.setDensity(latestArgsRef.current.density);
       graph.setStepRate(latestArgsRef.current.stepRate);
+      graph.setDepthDim(latestArgsRef.current.depthDim);
       graph.step(deltaSeconds, elapsedSeconds);
       graph.render();
     }

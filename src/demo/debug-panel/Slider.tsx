@@ -4,7 +4,7 @@ export type SliderProps = {
   max: number;
   step: number;
   value: number;
-  onChange?: (value: number) => void;
+  onChange?: ((value: number) => void) | undefined;
 };
 
 export function Slider({ label, min, max, step, value, onChange }: SliderProps) {

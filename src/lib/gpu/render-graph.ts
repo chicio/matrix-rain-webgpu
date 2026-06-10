@@ -22,6 +22,7 @@ export type CreateRenderGraphArgs = {
   stepRate: number;
   speedRange: [number, number];
   tailRange: [number, number];
+  depthDim: number;
 };
 
 export type RenderGraph = {
@@ -32,6 +33,9 @@ export type RenderGraph = {
   setDensity: (density: number) => void;
   setStepRate: (stepRate: number) => void;
   setAtlasLayer: (layer: number) => void;
+  setSpeedRange: (range: [number, number]) => void;
+  setTailRange: (range: [number, number]) => void;
+  setDepthDim: (value: number) => void;
   regenerate: () => void;
   getColumnCount: () => number;
   dispose: () => void;
@@ -51,8 +55,9 @@ function initialColumns(
   const [tailStart, tailEnd] = tailRange;
 
   return Array.from({ length: count }, () => {
-    const speed = minSpeed + (maxSpeed - minSpeed) * Math.random();
-    const depth = (speed - minSpeed) / (maxSpeed - minSpeed);
+    const speedSpan = maxSpeed - minSpeed;
+    const speed = speedSpan > 0 ? minSpeed + speedSpan * Math.random() : minSpeed;
+    const depth = speedSpan > 0 ? (speed - minSpeed) / speedSpan : 1;
     const tailLength = tailStart + (tailEnd - tailStart) * Math.random();
 
     return {
@@ -66,9 +71,12 @@ function initialColumns(
 }
 
 export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
-  const { root, ctx, atlas, cellSize, speedRange, tailRange } = args;
+  const { root, ctx, atlas, cellSize } = args;
   let density = args.density;
   let stepRate = args.stepRate;
+  let speedRange = args.speedRange;
+  let tailRange = args.tailRange;
+  let depthDim = args.depthDim;
 
   const uniforms: TgpuUniform<typeof Uniforms> = root.createUniform(Uniforms, {
     time: 0,
@@ -76,7 +84,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     resolution: d.vec2f(0, 0),
     cellSize,
     density,
-    depthDim: 0.6,
+    depthDim,
     mousePosition: d.vec2f(0, 0),
     mouseStrength: 0,
     scrollVelocity: 0,
@@ -147,7 +155,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   function step(deltaSeconds: number, elapsedSeconds: number) {
     stepAccumulator += deltaSeconds;
     const stepInterval = 1 / stepRate;
-    uniforms.patch({ time: elapsedSeconds, density });
+    uniforms.patch({ time: elapsedSeconds, density, depthDim });
     const workgroupCount = Math.ceil(columnCount / COMPUTE_STEP_WORKGROUP_SIZE);
     while (stepAccumulator >= stepInterval) {
       stepAccumulator -= stepInterval;
@@ -181,6 +189,18 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     uniforms.patch({ atlasLayer: value });
   }
 
+  function setSpeedRange(range: [number, number]) {
+    speedRange = range;
+  }
+
+  function setTailRange(range: [number, number]) {
+    tailRange = range;
+  }
+
+  function setDepthDim(value: number) {
+    depthDim = value;
+  }
+
   function dispose() {
     uniforms.buffer.destroy();
     columns?.buffer.destroy();
@@ -201,6 +221,9 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     setDensity,
     setStepRate,
     setAtlasLayer,
+    setSpeedRange,
+    setTailRange,
+    setDepthDim,
     regenerate,
     getColumnCount,
     dispose,
