@@ -297,29 +297,29 @@ src/
 
 ### Task 4.1: `hash.ts` — deterministic hash helpers
 
-- [ ] **Step 1:** Wrap or thin-adapt `@typegpu/noise`'s `randf` API for our needs. Specifically we want `glyphIndex(seed, slotY) -> u32 in [0, GLYPH_COUNT)`. If `randf` exposes a stateless hash that takes two `u32`s, use it directly. Otherwise write a `wangHash2(a, b)` or a small PCG variant in WGSL.
-- [ ] **Step 2:** Commit: `feat(m4): hash helpers`
+- [x] **Step 1:** Wrap or thin-adapt `@typegpu/noise`'s `randf` API for our needs. Specifically we want `glyphIndex(seed, slotY) -> u32 in [0, GLYPH_COUNT)`. If `randf` exposes a stateless hash that takes two `u32`s, use it directly. Otherwise write a `wangHash2(a, b)` or a small PCG variant in WGSL. *(Picked the randf wrapper for consistency with M2's respawn RNG; seed normalized via U32_MAX, slotY scaled by 0.01 per noise.md guidance.)*
+- [x] **Step 2:** Commit: `feat(m4): hash helpers` *(landed as `3fa3cf8`.)*
 
 ### Task 4.2: Render-glyphs samples the correct atlas layer per cell
 
-- [ ] **Step 1:** Replace the single-quad single-layer M3 logic with: full-screen fragment derives `(columnIdx, slotY)` from `uv`, reads `Column[columnIdx]`, computes `k = floor(headY) - slotY` (cells behind head). If `k < 0 || k > tailLen`: discard. Otherwise: `glyphIdx = hash(seed, slotY) % GLYPH_COUNT`, `sdfSample = sample(atlas, vec3(localUV, glyphIdx))`, `alpha = smoothstep(...)`. Pick brightness via the falloff function.
-- [ ] **Step 2:** Implement `falloff(k, tailLen, depth)` analytically. Simple start: `brightness = pow(1 - k / tailLen, 1.5) * (0.3 + 0.7 * depth)`. Tune live with the demo.
-- [ ] **Step 3:** **Decision point (per spec §4.1):** pick deterministic monotone-falloff vs probabilistic-flavor (hash-driven brightness bucket per cell). Implement both behind a debug-panel toggle so the difference is visible; pick the keeper before tagging.
-- [ ] **Step 4:** Wire the head color: at `k == 0` use `HEAD`; for `k > 0` interpolate `mix(TRAIL, FADE, k / tailLen)`. Multiply by `falloff(...)`.
-- [ ] **Step 5:** Commit: `feat(m4): per-cell glyphs from hash(seed, slotY) + analytic falloff`
+- [x] **Step 1:** Replace the single-quad single-layer M3 logic with: full-screen fragment derives `(columnIdx, slotY)` from `uv`, reads `Column[columnIdx]`, computes `k = floor(headY) - slotY` (cells behind head). If `k < 0 || k > tailLen`: discard. Otherwise: `glyphIdx = hash(seed, slotY) % GLYPH_COUNT`, `sdfSample = sample(atlas, vec3(localUV, glyphIdx))`, `alpha = smoothstep(...)`. Pick brightness via the falloff function.
+- [x] **Step 2:** Implement `falloff(k, tailLen, depth)` analytically. Simple start: `brightness = pow(1 - k / tailLen, 1.5) * (0.3 + 0.7 * depth)`. Tune live with the demo. *(Implemented and named: `tailFalloff` + `depthDimming` separately; depthDimming uses `std.mix(MIN_DEPTH_BRIGHTNESS, 1, depth)` for readability.)*
+- [x] **Step 3:** **Decision point (per spec §4.1):** pick deterministic monotone-falloff vs probabilistic-flavor (hash-driven brightness bucket per cell). Implement both behind a debug-panel toggle so the difference is visible; pick the keeper before tagging. **DEVIATION:** Skipped the toggle in favor of a **film-faithful hybrid**: deterministic gradient × per-cell ±60% jitter (decorrelated hash via `brightnessJitter(seed, row)`), clamped at the head so it stays uniformly bright. Closer to the film's "deliberate gradient with organic variation" than either pure option would be. See commit `f7c14a1` and the `Color model` note in DESIGN.md (TBW).
+- [x] **Step 4:** Wire the head color: at `k == 0` use `HEAD`; for `k > 0` interpolate `mix(TRAIL, FADE, k / tailLen)`. Multiply by `falloff(...)`. *(Implemented via `std.select(trailColor, head, k === 0)`.)*
+- [x] **Step 5:** Commit: `feat(m4): per-cell glyphs from hash(seed, slotY) + analytic falloff` *(landed as `eada3ef`; jitter follow-up `f7c14a1`.)*
 
 ### Task 4.3: Wire `glyphs-flat` render mode
 
-- [ ] **Step 1:** Render-mode selector now switches to the M4 glyph render for `glyphs-flat`. State-debug rectangle mode stays available for comparison.
-- [ ] **Step 2:** Atlas-debug mode can be retired or kept as a hidden diagnostic.
-- [ ] **Step 3:** Commit: `feat(demo): glyphs-flat render mode active`
+- [x] **Step 1:** Render-mode selector now switches to the M4 glyph render for `glyphs-flat`. State-debug rectangle mode stays available for comparison. **DEVIATION:** state-debug now produces identical output to glyphs-flat — replacing render-glyphs.ts with the M4 per-cell code retired the M2 rectangle renderer. If diagnostic rectangle view becomes useful again post-M6 (under bloom/CRT layers), can be resurrected as a dedicated pipeline.
+- [x] **Step 2:** Atlas-debug mode can be retired or kept as a hidden diagnostic. *(Kept; useful for verifying atlas after any future re-bake.)*
+- [x] **Step 3:** Commit: `feat(demo): glyphs-flat render mode active` *(landed as `e38da29`.)*
 
 **Chunk 4 verification:**
-- [ ] `glyphs-flat` shows columns of falling kana with the canonical Matrix look (head bright, tail fading, every cell a glyph).
-- [ ] Switching back to `state-debug` and forward keeps animation coherent (no buffer state corruption).
-- [ ] Density / stepRate / fontSize sliders still work; visible effect matches expectations.
-- [ ] Color model decision documented in the spec or a code comment.
-- [ ] Tag: `git tag 0.4.0`
+- [x] `glyphs-flat` shows columns of falling kana with the canonical Matrix look (head bright, tail fading, every cell a glyph).
+- [x] Switching back to `state-debug` and forward keeps animation coherent (no buffer state corruption).
+- [x] Density / stepRate / fontSize sliders still work; visible effect matches expectations. *(stepRate default lowered to 10 and fontSize to 20 for the M4 visual — see commit `f7c14a1`.)*
+- [x] Color model decision documented in the spec or a code comment. *(Hybrid keeper documented in commit message + planned DESIGN.md entry.)*
+- [x] Tag: `git tag 0.4.0`
 
 ---
 
