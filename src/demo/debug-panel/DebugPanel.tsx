@@ -6,6 +6,8 @@ import { RenderModeSelector, type RenderMode } from './RenderMode';
 
 type Props = EffectsProps & {
   canvasRef: RefObject<HTMLCanvasElement | null>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   renderMode: RenderMode;
   onRenderModeChange: (mode: RenderMode) => void;
   fpsRef: RefObject<HTMLElement | null>;
@@ -14,6 +16,8 @@ type Props = EffectsProps & {
 
 export function DebugPanel({
   canvasRef,
+  open,
+  onOpenChange,
   renderMode,
   onRenderModeChange,
   fpsRef,
@@ -21,13 +25,27 @@ export function DebugPanel({
   ...effectsProps
 }: Props) {
   return (
-    <aside id="rail">
-      <Effects {...effectsProps} />
-      <div className="rail-section">
-        <h3 className="rail-heading">Render Mode</h3>
-        <RenderModeSelector value={renderMode} onChange={onRenderModeChange} />
-      </div>
-      <Observability canvasRef={canvasRef} fpsRef={fpsRef} columnCount={columnCount} />
-    </aside>
+    <>
+      {/* Floating trigger — only shown on narrow screens (CSS). Toggles the drawer. */}
+      <button
+        type="button"
+        id="panel-toggle"
+        aria-label={open ? 'Close debug panel' : 'Open debug panel'}
+        aria-expanded={open}
+        onClick={() => onOpenChange(!open)}
+      >
+        {open ? '✕' : '☰'}
+      </button>
+      {/* Backdrop — tap to dismiss the drawer (mobile only). */}
+      <div id="panel-backdrop" data-open={open || undefined} onClick={() => onOpenChange(false)} />
+      <aside id="rail" data-open={open || undefined}>
+        <Effects {...effectsProps} />
+        <div className="rail-section">
+          <h3 className="rail-heading">Render Mode</h3>
+          <RenderModeSelector value={renderMode} onChange={onRenderModeChange} />
+        </div>
+        <Observability canvasRef={canvasRef} fpsRef={fpsRef} columnCount={columnCount} />
+      </aside>
+    </>
   );
 }

@@ -61,6 +61,9 @@ function App() {
   const [scanlineStrength, setScanlineStrength] = useState(DEFAULT_SCANLINE_STRENGTH);
   const [aberration, setAberration] = useState(DEFAULT_ABERRATION);
   const [paused, setPaused] = useState(false);
+  // Debug panel open/closed — only meaningful on narrow screens, where the rail
+  // becomes a slide-in drawer. On desktop the rail is always shown (CSS grid).
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const isAtlasDebug = renderMode === 'atlas-debug';
 
@@ -113,6 +116,8 @@ function App() {
       </section>
       <DebugPanel
         canvasRef={canvasRef}
+        open={panelOpen}
+        onOpenChange={setPanelOpen}
         renderMode={renderMode}
         onRenderModeChange={setRenderMode}
         fpsRef={fpsNodeRef}
