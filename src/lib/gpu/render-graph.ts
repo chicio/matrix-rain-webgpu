@@ -113,6 +113,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     atlasLayer: 0,
     bloomThreshold,
     bloomIntensity,
+    scanlineStrength: 0.3,
+    aberration: 1.0,
   });
 
   const atlasTexture = root

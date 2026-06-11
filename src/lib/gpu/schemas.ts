@@ -22,4 +22,6 @@ export const Uniforms = d.struct({
   atlasLayer: d.u32,
   bloomThreshold: d.f32,
   bloomIntensity: d.f32,
+  scanlineStrength: d.f32,
+  aberration: d.f32,
 });
