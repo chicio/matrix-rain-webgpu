@@ -449,9 +449,11 @@ src/
 
 ---
 
-## Chunk 8: Milestone 8 — Mouse + scroll interaction
+## Chunk 8: Milestone 8 — Mouse + scroll interaction — **CUT**
 
-**Purpose:** Cursor position and scroll velocity disturb nearby columns. CPU captures input; uniform write per frame; compute shader applies a force.
+> **CUT (2026-06-11).** Built end-to-end (capture hook → per-frame uniform write → compute-side force → demo controls + overlay), then removed before tag. Rationale: this effect is destined for a **blog background**, where cursor/scroll reactivity competes with the reader interacting with actual page content (links, text, scrolling-to-read) and is rarely noticed positively — it's the first effect to cut for a backdrop. The bloom + CRT + parallax stack carries the look. The work lives in git reflog (M8 tip `cdd638a`) if it's ever wanted as an opt-in package feature or article section. **No `0.8.0` tag** — versioning skips it; M9 closes at `0.9.0`. The pre-existing `mousePosition`/`mouseStrength`/`scrollVelocity` uniform fields (M2 scaffolding) are now permanently dead → flagged for the M10 schema/dependency audit.
+
+**Purpose (original):** Cursor position and scroll velocity disturb nearby columns. CPU captures input; uniform write per frame; compute shader applies a force.
 
 **Files:**
 - Create: `src/lib/hooks/use-interaction.ts` (capture window mouse + scroll, decay)

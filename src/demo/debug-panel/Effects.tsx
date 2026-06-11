@@ -204,12 +204,6 @@ export function Effects({
         />
       </Group>
 
-      <Group title="Interaction" milestone="wired in M8">
-        <Toggle label="interaction" />
-        <Slider label="strength" min={0} max={2} step={0.05} value={1.0} />
-        <Slider label="radius (cells)" min={1} max={40} step={1} value={10} />
-      </Group>
-
       <Group title="Lifecycle" milestone="wired in M9">
         <Toggle label="paused" />
       </Group>

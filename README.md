@@ -34,8 +34,8 @@
 | M5 | Parallax (per-column speed + depth) + variable tail length | ✅ done (`0.5.0`) |
 | M6 | Bloom post-process (HDR target + separable blur + additive combine) | ✅ done (`0.6.0`) |
 | M7 | CRT pass (scanlines + chromatic aberration + tone-map) | ✅ done (`0.7.0`) |
-| M8 | Mouse + scroll interaction | next up |
-| M9 | `paused` static frame, lifecycle hardening, public component API | |
+| ~~M8~~ | ~~Mouse + scroll interaction~~ | ✂︎ cut — distracting for a background effect ([why](docs/superpowers/plans/2026-06-07-matrix-rain-webgpu-implementation.md)) |
+| M9 | `paused` static frame, lifecycle hardening, public component API | next up |
 | M10 | npm publish + full consumer documentation | |
 
 ---

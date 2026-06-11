@@ -155,7 +155,7 @@ export type {
   BloomOptions,
   CrtOptions,
   ParallaxOptions,
-  InteractionOptions,
+  // InteractionOptions — CUT at M8 (see milestone table)
 } from "./types";
 ```
 
@@ -177,7 +177,7 @@ interface MatrixRainProps {
   bloom?: BloomOptions | false;             // default { intensity: 1, threshold: 0.7 }
   crt?: CrtOptions | false;                 // default { scanlineStrength: 0.15, aberration: 0.4 }
   parallax?: ParallaxOptions | false;       // default { speedRange: [0.6, 1.6], depthDim: 0.5 }
-  interaction?: InteractionOptions | false; // default { source: 'window', strength: 1, radius: 120 }
+  // interaction?: CUT at M8 (2026-06-11) — cursor/scroll reactivity distracts in a background effect.
 
   // Misc
   className?: string;
@@ -315,7 +315,7 @@ Ten milestones. Each is one article section, one git tag (once the repo is `git 
 | 5 | Parallax: per-column speed + depth-modulated dim/blur | per-instance attributes, fragment-side depth modulation | `glyphs-parallax` render mode, `parallax` toggle + sliders |
 | 6 | Bloom post-process | multi-pass rendering, HDR offscreen, ping-pong textures, separable Gaussian blur, additive combine | `glyphs-bloom` render mode, `bloom` toggle + sliders |
 | 7 | CRT pass (scanlines + chromatic aberration) | post-process chain composition, uv tricks, tone mapping to swap chain | `glyphs-crt` (full) render mode, `crt` toggle + sliders |
-| 8 | Mouse + scroll interaction | per-frame uniform writes, CPU↔GPU data flow, compute-side force application | `interaction` toggle + sliders, mouse position overlay |
+| ~~8~~ | ~~Mouse + scroll interaction~~ | **CUT (2026-06-11)** — built then removed; cursor/scroll reactivity distracts in a background effect. No `0.8.0` tag. | — |
 | 9 | `paused` static frame + resize parity + error handling | cleanup contracts, lifecycle correctness, settled-snapshot semantics | `paused` toggle, in-page console for runtime errors |
 | 10 | API polish + publish | public exports lock, `package.json` `exports`, README, version 0.1.0, npm publish, **dependency audit (Section 7bis): uninstall any `@typegpu/*` package not actually imported** | install the published package in a throwaway project and import it — verifies consumability |
 
