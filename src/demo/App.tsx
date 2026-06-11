@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, type RefObject } from 'react';
 import { useConfigureContext, useFrame } from '@typegpu/react';
 
 import { GLYPH_COUNT } from '../lib/gpu/atlas/glyph-set';
@@ -21,9 +21,14 @@ const DEFAULT_BLOOM_INTENSITY = 1.5;
 const DPR = window.devicePixelRatio || 1;
 
 function App() {
-  const fpsRef = useRef(0);
+  const fpsValueRef = useRef(0);
   const lastFlushRef = useRef(0);
-  const [fps, setFps] = useState<number | null>(null);
+  // FPS is observability-only. We write it straight to this DOM node from the
+  // frame loop rather than through React state: a per-second setState would
+  // re-render <App>, and every commit makes @typegpu/react reassign
+  // canvas.width — which resets the WebGPU drawing buffer and flashes one
+  // black frame. Keeping it out of React state avoids that entirely.
+  const fpsNodeRef: RefObject<HTMLElement | null> = useRef<HTMLElement | null>(null);
 
   const { ref: configureRef, ctxRef } = useConfigureContext({
     autoResize: true,
@@ -76,10 +81,12 @@ function App() {
       return;
     }
     if (deltaSeconds > 0) {
-      fpsRef.current = fpsRef.current * 0.9 + (1 / deltaSeconds) * 0.1;
+      fpsValueRef.current = fpsValueRef.current * 0.9 + (1 / deltaSeconds) * 0.1;
     }
     if (elapsedSeconds - lastFlushRef.current > 1.0) {
-      setFps(fpsRef.current);
+      if (fpsNodeRef.current) {
+        fpsNodeRef.current.textContent = fpsValueRef.current.toFixed(0);
+      }
       lastFlushRef.current = elapsedSeconds;
     }
 
@@ -95,7 +102,7 @@ function App() {
         canvasRef={canvasRef}
         renderMode={renderMode}
         onRenderModeChange={setRenderMode}
-        fps={fps}
+        fpsRef={fpsNodeRef}
         columnCount={columnCount}
         density={density}
         stepRate={stepRate}

@@ -8,7 +8,7 @@ type Props = EffectsProps & {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   renderMode: RenderMode;
   onRenderModeChange: (mode: RenderMode) => void;
-  fps: number | null;
+  fpsRef: RefObject<HTMLElement | null>;
   columnCount: number | null;
 };
 
@@ -16,7 +16,7 @@ export function DebugPanel({
   canvasRef,
   renderMode,
   onRenderModeChange,
-  fps,
+  fpsRef,
   columnCount,
   ...effectsProps
 }: Props) {
@@ -27,7 +27,7 @@ export function DebugPanel({
         <h3 className="rail-heading">Render Mode</h3>
         <RenderModeSelector value={renderMode} onChange={onRenderModeChange} />
       </div>
-      <Observability canvasRef={canvasRef} fps={fps} columnCount={columnCount} />
+      <Observability canvasRef={canvasRef} fpsRef={fpsRef} columnCount={columnCount} />
     </aside>
   );
 }
