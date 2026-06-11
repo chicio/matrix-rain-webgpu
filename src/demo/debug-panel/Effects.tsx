@@ -31,6 +31,7 @@ export type EffectsProps = {
   crtEnabled: boolean;
   scanlineStrength: number;
   aberration: number;
+  paused: boolean;
   onDensityChange: (value: number) => void;
   onStepRateChange: (value: number) => void;
   onFontSizeChange: (value: number) => void;
@@ -44,6 +45,7 @@ export type EffectsProps = {
   onCrtEnabledChange: (value: boolean) => void;
   onScanlineStrengthChange: (value: number) => void;
   onAberrationChange: (value: number) => void;
+  onPausedChange: (value: boolean) => void;
   onRegenerate: () => void;
 };
 
@@ -63,6 +65,7 @@ export function Effects({
   crtEnabled,
   scanlineStrength,
   aberration,
+  paused,
   onDensityChange,
   onStepRateChange,
   onFontSizeChange,
@@ -76,6 +79,7 @@ export function Effects({
   onCrtEnabledChange,
   onScanlineStrengthChange,
   onAberrationChange,
+  onPausedChange,
   onRegenerate,
 }: EffectsProps) {
   return (
@@ -204,8 +208,8 @@ export function Effects({
         />
       </Group>
 
-      <Group title="Lifecycle" milestone="wired in M9">
-        <Toggle label="paused" />
+      <Group title="Lifecycle" disabled={false}>
+        <Toggle label="paused" checked={paused} onChange={onPausedChange} />
       </Group>
     </div>
   );

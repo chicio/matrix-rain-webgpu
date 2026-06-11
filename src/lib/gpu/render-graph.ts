@@ -47,6 +47,7 @@ export type CreateRenderGraphArgs = {
 export type RenderGraph = {
   resize: (width: number, height: number) => void;
   step: (deltaSeconds: number, elapsedSeconds: number) => void;
+  settle: () => void;
   render: () => void;
   renderAtlasDebug: () => void;
   setDensity: (density: number) => void;
@@ -273,6 +274,25 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     uniforms.patch({ stepProgress: stepAccumulator / stepInterval });
   }
 
+  // Advance the simulation to a settled-looking frame in one shot — used when
+  // `paused` turns on (especially a from-cold paused mount, where columns start
+  // mostly offscreen). ceil(rows / averageSpeed) steps guarantees every column
+  // has fallen past its start at least once. stepProgress is zeroed so the
+  // static render samples the discrete head, not a mid-step interpolation.
+  function settle() {
+    const workgroupCount = Math.ceil(columnCount / COMPUTE_STEP_WORKGROUP_SIZE);
+    if (!computePipeline || workgroupCount <= 0 || viewportHeight <= 0) {
+      return;
+    }
+    const rows = viewportHeight / cellSize;
+    const averageSpeed = Math.max((speedRange[0] + speedRange[1]) / 2, 0.0001);
+    const iterations = Math.max(1, Math.ceil(rows / averageSpeed));
+    for (let i = 0; i < iterations; i++) {
+      computePipeline.dispatchWorkgroups(workgroupCount);
+    }
+    uniforms.patch({ stepProgress: 0 });
+  }
+
   function render() {
     if (!renderPipeline || !hdrTarget) {
       return;
@@ -397,6 +417,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   return {
     resize,
     step,
+    settle,
     render,
     renderAtlasDebug,
     setDensity,

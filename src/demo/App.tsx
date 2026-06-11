@@ -60,6 +60,7 @@ function App() {
   const [crtEnabled, setCrtEnabled] = useState(DEFAULT_CRT_ENABLED);
   const [scanlineStrength, setScanlineStrength] = useState(DEFAULT_SCANLINE_STRENGTH);
   const [aberration, setAberration] = useState(DEFAULT_ABERRATION);
+  const [paused, setPaused] = useState(false);
 
   const isAtlasDebug = renderMode === 'atlas-debug';
 
@@ -83,6 +84,7 @@ function App() {
     crtEnabled,
     scanlineStrength,
     aberration,
+    paused,
   });
 
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
@@ -128,6 +130,7 @@ function App() {
         crtEnabled={crtEnabled}
         scanlineStrength={scanlineStrength}
         aberration={aberration}
+        paused={paused}
         onDensityChange={setDensity}
         onStepRateChange={setStepRate}
         onFontSizeChange={setFontSize}
@@ -141,6 +144,7 @@ function App() {
         onCrtEnabledChange={setCrtEnabled}
         onScanlineStrengthChange={setScanlineStrength}
         onAberrationChange={setAberration}
+        onPausedChange={setPaused}
         onRegenerate={regenerate}
       />
     </div>

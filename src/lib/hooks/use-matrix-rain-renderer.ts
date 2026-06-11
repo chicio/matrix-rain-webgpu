@@ -19,6 +19,7 @@ type UseMatrixRainRendererArgs = {
   crtEnabled: boolean;
   scanlineStrength: number;
   aberration: number;
+  paused: boolean;
 };
 
 export type MatrixRainRenderer = {
@@ -36,6 +37,9 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
   const [columnCount, setColumnCount] = useState(0);
   const lastColumnCountRef = useRef(0);
   const atlasRef = useRef<SdfAtlas | null>(null);
+  // True once the settled static frame has been drawn for the current paused
+  // spell; reset when the animation resumes so the next pause re-settles.
+  const staticFrameDrawnRef = useRef(false);
 
   // Bake the SDF atlas once on mount; cancelable in case the component unmounts mid-bake.
   useEffect(() => {
@@ -116,8 +120,20 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       graph.setCrtEnabled(latestArgsRef.current.crtEnabled);
       graph.setScanlineStrength(latestArgsRef.current.scanlineStrength);
       graph.setAberration(latestArgsRef.current.aberration);
-      graph.step(deltaSeconds, elapsedSeconds);
-      graph.render();
+
+      if (latestArgsRef.current.paused) {
+        // Settle to a meaningful frame and draw it once, then idle. The rAF keeps
+        // firing (useFrame has no unsubscribe), but each paused tick is a no-op.
+        if (!staticFrameDrawnRef.current) {
+          graph.settle();
+          graph.render();
+          staticFrameDrawnRef.current = true;
+        }
+      } else {
+        staticFrameDrawnRef.current = false;
+        graph.step(deltaSeconds, elapsedSeconds);
+        graph.render();
+      }
     }
 
     const current = graph.getColumnCount();
