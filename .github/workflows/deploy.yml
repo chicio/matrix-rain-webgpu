@@ -1,0 +1,51 @@
+name: Deploy demo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Allow only one concurrent deployment, but let in-progress runs finish so a
+# live deploy is never interrupted half-way.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # Quality gate + build. Runs on every push and PR; only `deploy` is main-gated,
+  # so PRs get full validation (types + lint/fmt + build) without publishing.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run types
+      - run: npm run check
+      # base must match the project-pages path (https://chicio.github.io/matrix-rain-webgpu/).
+      # Kept as a CLI flag so vite.config.ts stays at base "/" for local dev.
+      - run: npx vite build --base=/matrix-rain-webgpu/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
