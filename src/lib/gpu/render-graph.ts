@@ -287,7 +287,14 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     const rows = viewportHeight / cellSize;
     const averageSpeed = Math.max((speedRange[0] + speedRange[1]) / 2, 0.0001);
     const iterations = Math.max(1, Math.ceil(rows / averageSpeed));
+    const stepInterval = 1 / stepRate;
     for (let i = 0; i < iterations; i++) {
+      // Advance time each iteration: the respawn roll is seeded on time, so a
+      // frozen time makes every column's roll identical — they all march off the
+      // bottom without the stochastic respawns that refill the top, draining the
+      // screen to black. Stepping time reaches the same steady-state spread as
+      // the live loop.
+      uniforms.patch({ time: (i + 1) * stepInterval });
       computePipeline.dispatchWorkgroups(workgroupCount);
     }
     uniforms.patch({ stepProgress: 0 });

@@ -37,9 +37,6 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
   const [columnCount, setColumnCount] = useState(0);
   const lastColumnCountRef = useRef(0);
   const atlasRef = useRef<SdfAtlas | null>(null);
-  // True once the settled static frame has been drawn for the current paused
-  // spell; reset when the animation resumes so the next pause re-settles.
-  const staticFrameDrawnRef = useRef(false);
 
   // Bake the SDF atlas once on mount; cancelable in case the component unmounts mid-bake.
   useEffect(() => {
@@ -85,7 +82,7 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       return;
     }
     if (!graphRef.current) {
-      graphRef.current = createRenderGraph({
+      const graph = createRenderGraph({
         root,
         ctx,
         atlas,
@@ -102,6 +99,11 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
         scanlineStrength: latestArgsRef.current.scanlineStrength,
         aberration: latestArgsRef.current.aberration,
       });
+      // Settle once at birth so the very first frame is full (matters when
+      // mounted with paused=true; also avoids the empty-then-fill startup ramp).
+      graph.resize(ctx.canvas.width, ctx.canvas.height);
+      graph.settle();
+      graphRef.current = graph;
     }
     const graph = graphRef.current;
     const canvas = ctx.canvas;
@@ -121,19 +123,15 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       graph.setScanlineStrength(latestArgsRef.current.scanlineStrength);
       graph.setAberration(latestArgsRef.current.aberration);
 
-      if (latestArgsRef.current.paused) {
-        // Settle to a meaningful frame and draw it once, then idle. The rAF keeps
-        // firing (useFrame has no unsubscribe), but each paused tick is a no-op.
-        if (!staticFrameDrawnRef.current) {
-          graph.settle();
-          graph.render();
-          staticFrameDrawnRef.current = true;
-        }
-      } else {
-        staticFrameDrawnRef.current = false;
+      // Advance the simulation only while running; render every tick regardless.
+      // Rendering even when paused is deliberate: toggling paused re-renders App,
+      // which makes @typegpu/react reassign canvas.width and clear the buffer to
+      // black — repainting each frame heals that (and resize-while-paused) without
+      // moving the columns.
+      if (!latestArgsRef.current.paused) {
         graph.step(deltaSeconds, elapsedSeconds);
-        graph.render();
       }
+      graph.render();
     }
 
     const current = graph.getColumnCount();
