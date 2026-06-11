@@ -107,7 +107,9 @@ function App() {
   return (
     <div id="shell">
       <section id="stage">
-        <canvas ref={setCanvas} />
+        <div id="canvas-frame">
+          <canvas ref={setCanvas} />
+        </div>
       </section>
       <DebugPanel
         canvasRef={canvasRef}

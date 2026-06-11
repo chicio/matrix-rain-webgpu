@@ -43,8 +43,29 @@ html,
 
 #stage {
   position: relative;
-  background: #000;
+  /* Faint grid behind the canvas frame so the vacated area is visible when the
+     frame is dragged smaller — makes the resize path obvious during testing. */
+  background:
+    repeating-linear-gradient(0deg, transparent 0 23px, var(--rail-border) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, var(--rail-border) 23px 24px), #050505;
   overflow: hidden;
+  padding: 0;
+}
+
+/* Resizable wrapper — drag the bottom-right grip to change the canvas size
+   independently of the window, exercising the split-purpose resize logic.
+   autoResize matches the drawing buffer to this element's CSS size. */
+#canvas-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 240px;
+  min-height: 160px;
+  max-width: 100%;
+  max-height: 100%;
+  resize: both;
+  overflow: hidden;
+  background: #000;
 }
 
 #stage canvas {
