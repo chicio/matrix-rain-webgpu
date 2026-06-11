@@ -10,17 +10,19 @@
 
 ---
 
-## What works today (through M6 / tag `0.6.0`)
+## What works today (through M7 / tag `0.7.0`)
 
 - Falling kana with bright head + fading trail; every cell shows a unique glyph.
 - 48-character atlas (Japanese half-width kana + digits + punctuation), runtime-baked as a signed distance field.
 - Smooth head-to-tail brightness gradient with per-cell organic variation (film-faithful hybrid).
 - **Parallax depth (M5):** per-column fall speed maps to a depth cue — far columns are dimmer and edge-softer; tail length varies per column.
 - **Bloom (M6):** HDR render target → bright-pass extract → separable Gaussian blur (ping-pong) → additive combine, toggleable with threshold + intensity controls.
+- **CRT (M7):** final post-process pass — chromatic aberration + scanlines + clamp tone-map. See [`docs/crt-pass.md`](docs/crt-pass.md) for the full math walkthrough.
 - Live debug panel:
   - **Simulation:** density, stepRate, fontSize sliders + regenerate-seeds button
   - **Parallax:** speed min/max, tail min/max, depth-dimming sliders
   - **Bloom:** toggle + intensity + threshold sliders
+  - **CRT:** toggle + scanlineStrength + aberration sliders
   - **Atlas debug:** scrub through all 48 glyphs to verify the bake
   - **Render mode:** the rain (`matrix-rain`, fully tuned via the panel) plus the `atlas-debug` raw-SDF view
   - **Observability:** FPS, canvas size + DPR, live column count, in-page error console
@@ -31,8 +33,8 @@
 |---|---|---|
 | M5 | Parallax (per-column speed + depth) + variable tail length | ✅ done (`0.5.0`) |
 | M6 | Bloom post-process (HDR target + separable blur + additive combine) | ✅ done (`0.6.0`) |
-| M7 | CRT pass (scanlines + chromatic aberration + tone-map) | next up |
-| M8 | Mouse + scroll interaction | |
+| M7 | CRT pass (scanlines + chromatic aberration + tone-map) | ✅ done (`0.7.0`) |
+| M8 | Mouse + scroll interaction | next up |
 | M9 | `paused` static frame, lifecycle hardening, public component API | |
 | M10 | npm publish + full consumer documentation | |
 

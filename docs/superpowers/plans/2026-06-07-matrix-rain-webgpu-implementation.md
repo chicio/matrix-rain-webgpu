@@ -429,23 +429,23 @@ src/
 
 ### Task 7.1: CRT fragment shader
 
-- [ ] **Step 1:** Takes the post-bloom HDR (or tone-mapped LDR) and adds: scanlines `1 - scanlineStrength * (0.5 + 0.5 * sin(uv.y * scanlineFreq))`, chromatic aberration `vec3(sampleR offset, sampleG, sampleB offset)` where offsets are a few px.
-- [ ] **Step 2:** Tone-map at the end (use `@typegpu/color` if it offers helpers; otherwise simple Reinhard or no-op for now).
-- [ ] **Step 3:** Commit: `feat(m7): CRT pass — scanlines + chromatic aberration`
+- [x] **Step 1:** Takes the post-bloom HDR (or tone-mapped LDR) and adds: scanlines `1 - scanlineStrength * (0.5 + 0.5 * sin(uv.y * scanlineFreq))`, chromatic aberration `vec3(sampleR offset, sampleG, sampleB offset)` where offsets are a few px.
+- [x] **Step 2:** Tone-map at the end (use `@typegpu/color` if it offers helpers; otherwise simple Reinhard or no-op for now). **Decision:** `@typegpu/color` only offers sRGB conversions, no tone-map helper. Tried Reinhard — it crushed midtones (our signal is mostly `[0,1]`, not true HDR; a `1.0` head → `0.5`), so switched to a **clamp** (`std.saturate`). Bloom's `>1.0` overshoot blows out to white; matches the pre-M7 implicit swap-chain clamp.
+- [x] **Step 3:** Commit: `feat(m7): CRT pass — scanlines + chromatic aberration` (+ `feat(m7): clamp tone-map + honest scanline period`)
 
 ### Task 7.2: Wire into render-graph as the final pass
 
-- [ ] **Step 1:** When `crt !== false`, CRT replaces the passthrough blit. When `false`, blit unchanged.
-- [ ] **Step 2:** Debug-panel controls enabled.
-- [ ] **Step 3:** Commit: `feat(demo): m7 CRT controls`
+- [x] **Step 1:** When `crt !== false`, CRT replaces the passthrough blit. When `false`, blit unchanged. **Implemented as:** combine writes to a full-res HDR `combineTarget`; `render()` picks `composite = bloom ? combineTarget : hdrTarget`, then `crtEnabled ? crt(composite) : blit(composite) → swap chain`.
+- [x] **Step 2:** Debug-panel controls enabled (`crt` toggle + `scanlineStrength` + `aberration`); milestone tag removed.
+- [x] **Step 3:** Commit: `feat(m7): wire CRT pass + demo controls` (folds the planned `feat(demo): m7 CRT controls`). Plus `docs(m7): CRT pass explainer` (`docs/crt-pass.md`).
 
 **Chunk 7 verification:**
-- [ ] `glyphs-crt` (full pipeline) render mode looks like the "final" Matrix rain.
-- [ ] Disabling CRT gives back the cleaner bloom output.
-- [ ] Aberration slider produces visible RGB fringing.
-- [ ] Scanline slider visibly modulates horizontal bands.
-- [ ] FPS stable.
-- [ ] Tag: `git tag 0.7.0`
+- [x] `glyphs-crt` (full pipeline) render mode looks like the "final" Matrix rain. (Confirmed visually; CRT scan reads great.)
+- [x] Disabling CRT gives back the cleaner bloom output. (Final pass falls back to plain blit.)
+- [x] Aberration slider produces visible RGB fringing.
+- [x] Scanline slider visibly modulates horizontal bands. (Confirmed: 0.5 → 0.3 visibly reduced band depth.)
+- [x] FPS stable. (Observability showed 120 FPS with full pipeline on.)
+- [x] Tag: `git tag 0.7.0`
 
 ---
 
