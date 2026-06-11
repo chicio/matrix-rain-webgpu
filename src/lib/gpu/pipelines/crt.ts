@@ -2,9 +2,10 @@ import { common, d, std, tgpu, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { blitBindings } from './blit';
 import { Uniforms } from '../schemas';
 
-// One dark scanline band every ~2 device pixels. Kept as a build-time constant
-// (folded into the frequency below) — the slider controls depth, not spacing.
-const SCANLINE_PERIOD_PX = 2.0;
+// Spacing between scanline bands, in device pixels (one full bright→bright
+// sine period). Build-time constant — the slider controls band depth, not
+// spacing. See docs/crt-pass.md for the frequency derivation.
+const SCANLINE_PERIOD_PX = 4.0;
 
 // Final full-screen pass: samples the composited scene (reusing blitBindings —
 // a single texture + sampler) and stamps the CRT character onto it before it
@@ -22,14 +23,17 @@ export function createCrtPipeline(root: TgpuRoot, uniforms: TgpuUniform<typeof U
     const r = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv + offset).x;
     const g = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv).y;
     const b = std.textureSample(blitBindings.$.source, blitBindings.$.sampler, uv - offset).z;
-    let color = d.vec3f(r, g, b);
+    // Clamp, don't tone-map. Our signal is mostly in [0,1] (heads clamp at 1.0,
+    // bloom adds a modest overshoot), so a global operator like Reinhard would
+    // crush midtones (a 1.0 head → 0.5). Clamping lets bloom's >1.0 highlights
+    // blow out to white — the desirable glow look, and identical to the pre-M7
+    // implicit swap-chain clamp. Revisit a real tone-map if heads emit true HDR.
+    let color = std.saturate(d.vec3f(r, g, b));
 
-    // Reinhard tone-map: compress HDR (bloom can push channels past 1.0) into [0,1).
-    color = color / (color + d.vec3f(1));
-
-    // Scanlines: a horizontal brightness ripple. Frequency scales with vertical
-    // resolution so band spacing stays constant in device pixels at any canvas size.
-    const scanFreq = uniforms.$.resolution.y * (Math.PI / SCANLINE_PERIOD_PX);
+    // Scanlines: a horizontal brightness ripple. scanFreq is the total angle (in
+    // radians) swept top→bottom; tying it to resolution.y keeps band spacing
+    // constant in device pixels at any canvas size. 2π = one full sine period.
+    const scanFreq = uniforms.$.resolution.y * ((2 * Math.PI) / SCANLINE_PERIOD_PX);
     const scan = 1 - uniforms.$.scanlineStrength * (0.5 + 0.5 * std.sin(uv.y * scanFreq));
     color = color * scan;
 
