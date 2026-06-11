@@ -13,6 +13,7 @@ import {
   type RenderAtlasDebugPipeline,
 } from './pipelines/render-atlas-debug';
 import { blitBindings, createBlitPipeline, type BlitPipeline } from './pipelines/blit';
+import { createCrtPipeline, type CrtPipeline } from './pipelines/crt';
 import {
   combineBindings,
   createBlurPipeline,
@@ -38,6 +39,9 @@ export type CreateRenderGraphArgs = {
   bloomEnabled: boolean;
   bloomThreshold: number;
   bloomIntensity: number;
+  crtEnabled: boolean;
+  scanlineStrength: number;
+  aberration: number;
 };
 
 export type RenderGraph = {
@@ -54,6 +58,9 @@ export type RenderGraph = {
   setBloomEnabled: (value: boolean) => void;
   setBloomThreshold: (value: number) => void;
   setBloomIntensity: (value: number) => void;
+  setCrtEnabled: (value: boolean) => void;
+  setScanlineStrength: (value: number) => void;
+  setAberration: (value: number) => void;
   regenerate: () => void;
   getColumnCount: () => number;
   dispose: () => void;
@@ -98,6 +105,9 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   let bloomEnabled = args.bloomEnabled;
   let bloomThreshold = args.bloomThreshold;
   let bloomIntensity = args.bloomIntensity;
+  let crtEnabled = args.crtEnabled;
+  let scanlineStrength = args.scanlineStrength;
+  let aberration = args.aberration;
 
   const uniforms: TgpuUniform<typeof Uniforms> = root.createUniform(Uniforms, {
     time: 0,
@@ -113,8 +123,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     atlasLayer: 0,
     bloomThreshold,
     bloomIntensity,
-    scanlineStrength: 0.3,
-    aberration: 1.0,
+    scanlineStrength,
+    aberration,
   });
 
   const atlasTexture = root
@@ -158,7 +168,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   const extractPipeline: ExtractPipeline = createExtractPipeline(root, uniforms, HDR_FORMAT);
   const blurHPipeline: BlurPipeline = createBlurPipeline(root, uniforms, HDR_FORMAT, [1, 0]);
   const blurVPipeline: BlurPipeline = createBlurPipeline(root, uniforms, HDR_FORMAT, [0, 1]);
-  const combinePipeline: CombinePipeline = createCombinePipeline(root, uniforms);
+  const combinePipeline: CombinePipeline = createCombinePipeline(root, uniforms, HDR_FORMAT);
+  const crtPipeline: CrtPipeline = createCrtPipeline(root, uniforms);
 
   let columns: ColumnsBuffer | null = null;
   let computePipeline: ComputeStepPipeline | null = null;
@@ -195,6 +206,9 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   let extractTarget: ReturnType<typeof createRenderTarget> | null = null;
   let blurTargetA: ReturnType<typeof createRenderTarget> | null = null;
   let blurTargetB: ReturnType<typeof createRenderTarget> | null = null;
+  // combine writes the composited (scene + bloom) result here so the final CRT
+  // (or plain blit) pass can sample it. Full-res HDR — CRT tone-maps it itself.
+  let combineTarget: ReturnType<typeof createRenderTarget> | null = null;
   let combineBindGroup: ReturnType<typeof createCombineBindGroup> | null = null;
   let lastWidth = 0;
   let lastHeight = 0;
@@ -223,6 +237,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       blurTargetA = createRenderTarget(halfW, halfH);
       blurTargetB?.texture.destroy();
       blurTargetB = createRenderTarget(halfW, halfH);
+      combineTarget?.texture.destroy();
+      combineTarget = createRenderTarget(w, h);
       combineBindGroup = createCombineBindGroup(hdrTarget, blurTargetB);
     }
     uniforms.patch({ resolution: d.vec2f(w, h) });
@@ -238,7 +254,15 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   function step(deltaSeconds: number, elapsedSeconds: number) {
     stepAccumulator += deltaSeconds;
     const stepInterval = 1 / stepRate;
-    uniforms.patch({ time: elapsedSeconds, density, depthDim, bloomThreshold, bloomIntensity });
+    uniforms.patch({
+      time: elapsedSeconds,
+      density,
+      depthDim,
+      bloomThreshold,
+      bloomIntensity,
+      scanlineStrength,
+      aberration,
+    });
     const workgroupCount = Math.ceil(columnCount / COMPUTE_STEP_WORKGROUP_SIZE);
     while (stepAccumulator >= stepInterval) {
       stepAccumulator -= stepInterval;
@@ -256,7 +280,17 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     // 1: glyphs → HDR target.
     renderPipeline.with(atlasBindGroup).withColorAttachment({ view: hdrTarget.texture }).draw(3);
 
-    if (bloomEnabled && extractTarget && blurTargetA && blurTargetB && combineBindGroup) {
+    // The "composite" is whatever holds the finished scene before the final
+    // pass: the bloom-combined target if bloom ran, otherwise the raw glyphs.
+    let composite = hdrTarget;
+    if (
+      bloomEnabled &&
+      extractTarget &&
+      blurTargetA &&
+      blurTargetB &&
+      combineBindGroup &&
+      combineTarget
+    ) {
       // 2: bright-pass → extract (half-res).
       extractPipeline
         .with(hdrTarget.bindGroup)
@@ -272,12 +306,18 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
         .with(blurTargetA.bindGroup)
         .withColorAttachment({ view: blurTargetB.texture })
         .draw(3);
-      // 5: composite scene + intensity * bloom → swap chain.
-      combinePipeline.with(combineBindGroup).withColorAttachment({ view: ctx }).draw(3);
-    } else {
-      // Bloom off: straight passthrough HDR → swap chain (skips the chain).
-      blitPipeline.with(hdrTarget.bindGroup).withColorAttachment({ view: ctx }).draw(3);
+      // 5: composite scene + intensity * bloom → HDR combine target.
+      combinePipeline
+        .with(combineBindGroup)
+        .withColorAttachment({ view: combineTarget.texture })
+        .draw(3);
+      composite = combineTarget;
     }
+
+    // Final pass → swap chain. CRT stamps scanlines + aberration + tone-map;
+    // when off, a plain passthrough blit (same as pre-M7).
+    const finalPipeline = crtEnabled ? crtPipeline : blitPipeline;
+    finalPipeline.with(composite.bindGroup).withColorAttachment({ view: ctx }).draw(3);
   }
 
   function renderAtlasDebug() {
@@ -320,6 +360,18 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     bloomIntensity = value;
   }
 
+  function setCrtEnabled(value: boolean) {
+    crtEnabled = value;
+  }
+
+  function setScanlineStrength(value: number) {
+    scanlineStrength = value;
+  }
+
+  function setAberration(value: number) {
+    aberration = value;
+  }
+
   function dispose() {
     uniforms.buffer.destroy();
     columns?.buffer.destroy();
@@ -334,6 +386,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     blurTargetA = null;
     blurTargetB?.texture.destroy();
     blurTargetB = null;
+    combineTarget?.texture.destroy();
+    combineTarget = null;
   }
 
   function getColumnCount() {
@@ -354,6 +408,9 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     setBloomEnabled,
     setBloomThreshold,
     setBloomIntensity,
+    setCrtEnabled,
+    setScanlineStrength,
+    setAberration,
     regenerate,
     getColumnCount,
     dispose,

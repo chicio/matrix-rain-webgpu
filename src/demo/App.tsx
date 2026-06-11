@@ -18,6 +18,9 @@ const DEFAULT_DEPTH_DIM = 0.3;
 const DEFAULT_BLOOM_ENABLED = true;
 const DEFAULT_BLOOM_THRESHOLD = 0.8;
 const DEFAULT_BLOOM_INTENSITY = 1.5;
+const DEFAULT_CRT_ENABLED = true;
+const DEFAULT_SCANLINE_STRENGTH = 0.3;
+const DEFAULT_ABERRATION = 1.0;
 const DPR = window.devicePixelRatio || 1;
 
 function App() {
@@ -54,6 +57,9 @@ function App() {
   const [bloomEnabled, setBloomEnabled] = useState(DEFAULT_BLOOM_ENABLED);
   const [bloomThreshold, setBloomThreshold] = useState(DEFAULT_BLOOM_THRESHOLD);
   const [bloomIntensity, setBloomIntensity] = useState(DEFAULT_BLOOM_INTENSITY);
+  const [crtEnabled, setCrtEnabled] = useState(DEFAULT_CRT_ENABLED);
+  const [scanlineStrength, setScanlineStrength] = useState(DEFAULT_SCANLINE_STRENGTH);
+  const [aberration, setAberration] = useState(DEFAULT_ABERRATION);
 
   const isAtlasDebug = renderMode === 'atlas-debug';
 
@@ -74,6 +80,9 @@ function App() {
     bloomEnabled,
     bloomThreshold,
     bloomIntensity,
+    crtEnabled,
+    scanlineStrength,
+    aberration,
   });
 
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
@@ -116,6 +125,9 @@ function App() {
         bloomEnabled={bloomEnabled}
         bloomThreshold={bloomThreshold}
         bloomIntensity={bloomIntensity}
+        crtEnabled={crtEnabled}
+        scanlineStrength={scanlineStrength}
+        aberration={aberration}
         onDensityChange={setDensity}
         onStepRateChange={setStepRate}
         onFontSizeChange={setFontSize}
@@ -126,6 +138,9 @@ function App() {
         onBloomEnabledChange={setBloomEnabled}
         onBloomThresholdChange={setBloomThreshold}
         onBloomIntensityChange={setBloomIntensity}
+        onCrtEnabledChange={setCrtEnabled}
+        onScanlineStrengthChange={setScanlineStrength}
+        onAberrationChange={setAberration}
         onRegenerate={regenerate}
       />
     </div>

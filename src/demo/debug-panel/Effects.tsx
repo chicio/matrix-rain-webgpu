@@ -28,6 +28,9 @@ export type EffectsProps = {
   bloomEnabled: boolean;
   bloomThreshold: number;
   bloomIntensity: number;
+  crtEnabled: boolean;
+  scanlineStrength: number;
+  aberration: number;
   onDensityChange: (value: number) => void;
   onStepRateChange: (value: number) => void;
   onFontSizeChange: (value: number) => void;
@@ -38,6 +41,9 @@ export type EffectsProps = {
   onBloomEnabledChange: (value: boolean) => void;
   onBloomThresholdChange: (value: number) => void;
   onBloomIntensityChange: (value: number) => void;
+  onCrtEnabledChange: (value: boolean) => void;
+  onScanlineStrengthChange: (value: number) => void;
+  onAberrationChange: (value: number) => void;
   onRegenerate: () => void;
 };
 
@@ -54,6 +60,9 @@ export function Effects({
   bloomEnabled,
   bloomThreshold,
   bloomIntensity,
+  crtEnabled,
+  scanlineStrength,
+  aberration,
   onDensityChange,
   onStepRateChange,
   onFontSizeChange,
@@ -64,6 +73,9 @@ export function Effects({
   onBloomEnabledChange,
   onBloomThresholdChange,
   onBloomIntensityChange,
+  onCrtEnabledChange,
+  onScanlineStrengthChange,
+  onAberrationChange,
   onRegenerate,
 }: EffectsProps) {
   return (
@@ -172,10 +184,24 @@ export function Effects({
         />
       </Group>
 
-      <Group title="CRT" milestone="wired in M7">
-        <Toggle label="crt" />
-        <Slider label="scanlineStrength" min={0} max={1} step={0.05} value={0.3} />
-        <Slider label="aberration (px)" min={0} max={5} step={0.1} value={1.0} />
+      <Group title="CRT" disabled={false}>
+        <Toggle label="crt" checked={crtEnabled} onChange={onCrtEnabledChange} />
+        <Slider
+          label="scanlineStrength"
+          min={0}
+          max={1}
+          step={0.05}
+          value={scanlineStrength}
+          onChange={onScanlineStrengthChange}
+        />
+        <Slider
+          label="aberration (px)"
+          min={0}
+          max={5}
+          step={0.1}
+          value={aberration}
+          onChange={onAberrationChange}
+        />
       </Group>
 
       <Group title="Interaction" milestone="wired in M8">

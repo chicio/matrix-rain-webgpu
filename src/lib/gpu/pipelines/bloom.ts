@@ -116,7 +116,11 @@ export const combineBindings = tgpu.bindGroupLayout({
   sampler: { sampler: 'filtering' },
 });
 
-export function createCombinePipeline(root: TgpuRoot, uniforms: TgpuUniform<typeof Uniforms>) {
+export function createCombinePipeline(
+  root: TgpuRoot,
+  uniforms: TgpuUniform<typeof Uniforms>,
+  format: GPUTextureFormat,
+) {
   const fragMain = tgpu.fragmentFn({
     in: { uv: d.vec2f },
     out: d.vec4f,
@@ -131,6 +135,7 @@ export function createCombinePipeline(root: TgpuRoot, uniforms: TgpuUniform<type
   return root.createRenderPipeline({
     vertex: common.fullScreenTriangle,
     fragment: fragMain,
+    targets: { format },
   });
 }
 

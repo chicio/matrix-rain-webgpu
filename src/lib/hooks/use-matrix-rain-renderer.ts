@@ -16,6 +16,9 @@ type UseMatrixRainRendererArgs = {
   bloomEnabled: boolean;
   bloomThreshold: number;
   bloomIntensity: number;
+  crtEnabled: boolean;
+  scanlineStrength: number;
+  aberration: number;
 };
 
 export type MatrixRainRenderer = {
@@ -91,6 +94,9 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
         bloomEnabled: latestArgsRef.current.bloomEnabled,
         bloomThreshold: latestArgsRef.current.bloomThreshold,
         bloomIntensity: latestArgsRef.current.bloomIntensity,
+        crtEnabled: latestArgsRef.current.crtEnabled,
+        scanlineStrength: latestArgsRef.current.scanlineStrength,
+        aberration: latestArgsRef.current.aberration,
       });
     }
     const graph = graphRef.current;
@@ -107,6 +113,9 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       graph.setBloomEnabled(latestArgsRef.current.bloomEnabled);
       graph.setBloomThreshold(latestArgsRef.current.bloomThreshold);
       graph.setBloomIntensity(latestArgsRef.current.bloomIntensity);
+      graph.setCrtEnabled(latestArgsRef.current.crtEnabled);
+      graph.setScanlineStrength(latestArgsRef.current.scanlineStrength);
+      graph.setAberration(latestArgsRef.current.aberration);
       graph.step(deltaSeconds, elapsedSeconds);
       graph.render();
     }
