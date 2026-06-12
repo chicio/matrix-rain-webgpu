@@ -18,13 +18,17 @@ import { MatrixRainWebGPU } from 'matrix-rain-webgpu';
 
 ## Why a WebGPU rewrite?
 
-The effect began its life as a 2D `<canvas>` implementation on [fabrizioduroni.it](https://www.fabrizioduroni.it). That version works, but every frame is CPU-driven pixel work: clearing, fading, and drawing each glyph. Moving it to the GPU lets us:
+The effect began its life as a 2D `<canvas>` implementation on [fabrizioduroni.it](https://www.fabrizioduroni.it). That version works, but every frame is CPU-driven pixel work: clearing, fading, and drawing each glyph.
+
+The push to rebuild it on the GPU came from [App.js Conf 2026](https://www.fabrizioduroni.it/blog/post/2026/06/01/app-js-conf-2026): I came back inspired by the talk on [TypeGPU](https://docs.swmansion.com/TypeGPU/) and decided to dust off my computer-graphics knowledge — with AI as a pair-programmer — and build something cool, the way I used to years ago when I was a computer-graphics enthusiast.
+
+Moving it to the GPU also unlocks things the 2D version can't do well:
 
 - **Render every cell in parallel** in a fragment shader, instead of looping on the CPU.
 - **Advance the simulation in a compute pass**, so column state lives and updates on the GPU.
 - **Add effects 2D can't do cheaply** — real bloom, per-column depth parallax, a CRT post-process — as extra GPU passes.
 
-It's also a study project: a vehicle for learning computer-graphics techniques (signed-distance-field text, separable blur, distance transforms) and the WebGPU/TypeGPU API in a real, shippable artifact.
+So it's equal parts shippable package and study project: a vehicle for relearning computer-graphics techniques (signed-distance-field text, separable blur, distance transforms) and the WebGPU/TypeGPU API in a real artifact.
 
 ## Goals
 
