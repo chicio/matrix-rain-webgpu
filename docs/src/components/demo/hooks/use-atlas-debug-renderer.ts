@@ -2,8 +2,8 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { useRoot } from '@typegpu/react';
 import { d, type TgpuRoot, type TgpuUniform } from 'typegpu';
 
-import { atlasBindings } from '../../lib/gpu/atlas/bindings';
-import { buildSdfAtlas, type SdfAtlas } from '../../lib/gpu/atlas/build-sdf-atlas';
+import { atlasBindings } from '@lib/gpu/atlas/bindings';
+import { buildSdfAtlas, type SdfAtlas } from '@lib/gpu/atlas/build-sdf-atlas';
 import {
   AtlasDebugUniforms,
   createAtlasDebugPipeline,

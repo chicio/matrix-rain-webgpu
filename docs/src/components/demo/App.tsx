@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState, type RefObject } from 'react';
 import { useConfigureContext, useFrame } from '@typegpu/react';
 
-import { GLYPH_COUNT } from '../../lib/gpu/atlas/glyph-set';
-import { useMatrixRainRenderer } from '../../lib/hooks/use-matrix-rain-renderer';
-import { useAtlasDebugRenderer } from '../hooks/use-atlas-debug-renderer';
+import { GLYPH_COUNT } from '@lib/gpu/atlas/glyph-set';
+import { useMatrixRainRenderer } from '@lib/hooks/use-matrix-rain-renderer';
+import { useAtlasDebugRenderer } from './hooks/use-atlas-debug-renderer';
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
 
