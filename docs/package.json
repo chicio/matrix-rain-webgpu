@@ -27,6 +27,9 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@webgpu/types": "^0.1.70",
+    "katex": "^0.17.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "typescript": "npm:tsover@6.0.1",
     "unplugin-typegpu": "^0.11.4"
   },

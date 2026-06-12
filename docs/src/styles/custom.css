@@ -1,0 +1,14 @@
+/* KaTeX styles for math rendering (remark-math + rehype-katex). */
+@import 'katex/dist/katex.min.css';
+
+/* Matrix-green accent for Starlight. */
+:root {
+	--sl-color-accent-low: #002b10;
+	--sl-color-accent: #00b32d;
+	--sl-color-accent-high: #9bffb0;
+}
+:root[data-theme='light'] {
+	--sl-color-accent-low: #b6ffc4;
+	--sl-color-accent: #007a1f;
+	--sl-color-accent-high: #00350d;
+}

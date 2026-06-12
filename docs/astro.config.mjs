@@ -4,15 +4,22 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import react from '@astrojs/react';
 import typegpu from 'unplugin-typegpu/vite';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // Deployed to GitHub Pages project site: https://chicio.github.io/matrix-rain-webgpu/
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://chicio.github.io',
 	base: '/matrix-rain-webgpu/',
+	markdown: {
+		remarkPlugins: [remarkMath],
+		rehypePlugins: [rehypeKatex],
+	},
 	integrations: [
 		starlight({
 			title: 'matrix-rain-webgpu',
+			customCss: ['./src/styles/custom.css'],
 			social: [
 				{
 					icon: 'github',
@@ -21,22 +28,17 @@ export default defineConfig({
 				},
 			],
 			sidebar: [
-				// Placeholder — the real IA is configured in Chunk 5.
-				{
-					label: 'Guides',
-					items: [{ label: 'Example Guide', slug: 'guides/example' }],
-				},
-				{
-					label: 'Reference',
-					items: [{ autogenerate: { directory: 'reference' } }],
-				},
+				{ label: 'Overview', items: [{ autogenerate: { directory: 'overview' } }] },
+				{ label: 'Usage', items: [{ autogenerate: { directory: 'usage' } }] },
+				{ label: 'Architecture', items: [{ autogenerate: { directory: 'architecture' } }] },
+				{ label: 'How it works', items: [{ autogenerate: { directory: 'how-it-works' } }] },
+				{ label: 'Reference', items: [{ slug: 'glossary' }] },
 			],
 		}),
 		react(),
 	],
 	vite: {
 		// unplugin-typegpu transforms the library's `'use gpu'` shader code (Babel).
-		// It must run over the lib source imported by the demo/hero islands.
 		// Cast: root (Vite 8/rolldown) and docs (Vite 6/rollup) ship different Plugin
 		// types; the plugin is duck-typed at runtime, so the cross-version cast is safe.
 		plugins: [/** @type {any} */ (typegpu({}))],
