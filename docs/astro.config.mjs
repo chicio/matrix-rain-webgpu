@@ -47,6 +47,12 @@ export default defineConfig({
 			alias: {
 				'@lib': fileURLToPath(new URL('../src', import.meta.url)),
 			},
+			// The lib source (../src) is in the ROOT package, so its bare imports would
+			// otherwise resolve to root/node_modules — a SECOND copy of typegpu/react
+			// from the one the docs island uses. Two TypeGPU instances break the
+			// 'use gpu' registry; two Reacts break the hooks dispatcher. Dedupe forces
+			// a single copy of each (docs/node_modules).
+			dedupe: ['typegpu', '@typegpu/noise', '@typegpu/react', 'react', 'react-dom'],
 		},
 		server: {
 			// Allow importing library source from outside the docs/ root.
