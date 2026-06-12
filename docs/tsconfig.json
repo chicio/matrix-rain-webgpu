@@ -6,7 +6,6 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "types": ["@webgpu/types"],
-    "baseUrl": ".",
     "paths": {
       "@lib": ["../src/index.ts"],
       "@lib/*": ["../src/*"]
