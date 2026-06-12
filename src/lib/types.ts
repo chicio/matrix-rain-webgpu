@@ -85,8 +85,10 @@ export interface MatrixRainProps {
   onError?: (err: Error) => void;
 }
 
+// `enabled` gates the bloom/crt GPU passes (no parameter value can skip a pass).
+// Parallax needs no flag — its disabled state is encoded in the values.
 export type Resolved<T> = Required<T> & { enabled: boolean };
 export type RainConfig = Required<RainOptions>;
 export type BloomConfig = Resolved<BloomOptions>;
 export type CrtConfig = Resolved<CrtOptions>;
-export type ParallaxConfig = Resolved<ParallaxOptions>;
+export type ParallaxConfig = Required<ParallaxOptions>;

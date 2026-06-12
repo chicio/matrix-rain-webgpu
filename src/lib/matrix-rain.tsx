@@ -83,10 +83,9 @@ function resolveParallax(opt: ParallaxOptions | false | undefined): ParallaxConf
   // Disabled → uniform speed + no dimming (the genuinely flat look); the resolved
   // values themselves encode the behavior, so downstream code needn't re-check.
   if (opt === false) {
-    return { enabled: false, speedRange: [1, 1], depthDim: 0 };
+    return { speedRange: [1, 1], depthDim: 0 };
   }
   return {
-    enabled: true,
     speedRange: opt?.speedRange ?? DEFAULTS.parallax.speedRange,
     depthDim: opt?.depthDim ?? DEFAULTS.parallax.depthDim,
   };

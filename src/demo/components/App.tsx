@@ -80,7 +80,7 @@ function App() {
     tailRange,
     bloom: { enabled: bloomEnabled, intensity: bloomIntensity, threshold: bloomThreshold },
     crt: { enabled: crtEnabled, scanlineStrength, aberration },
-    parallax: { enabled: true, speedRange, depthDim },
+    parallax: { speedRange, depthDim },
     paused,
   });
 
