@@ -1,14 +1,22 @@
+// Demo-only diagnostic: renders one SDF atlas layer as a centered quad so we can
+// eyeball the baked glyphs. Lives in the demo (not the lib) so it never ships in
+// the published package. Reuses the lib's shared atlas bind-group + palette; runs
+// off its own small uniform rather than the production Uniforms struct.
 import { common, d, std, tgpu, type TgpuRoot, type TgpuUniform } from 'typegpu';
-import { atlasBindings } from '../atlas/bindings';
-import { PALETTE } from '../palette';
-import { Uniforms } from '../schemas';
+import { atlasBindings } from '../lib/gpu/atlas/bindings';
+import { PALETTE } from '../lib/gpu/palette';
 
 // Fraction of the smaller canvas dimension that the centered debug quad occupies.
 const QUAD_FRACTION = 0.6;
 
-export function createRenderAtlasDebugPipeline(
+export const AtlasDebugUniforms = d.struct({
+  resolution: d.vec2f,
+  atlasLayer: d.u32,
+});
+
+export function createAtlasDebugPipeline(
   root: TgpuRoot,
-  uniforms: TgpuUniform<typeof Uniforms>,
+  uniforms: TgpuUniform<typeof AtlasDebugUniforms>,
 ) {
   const fragMain = tgpu.fragmentFn({
     in: { uv: d.vec2f },
@@ -51,4 +59,4 @@ export function createRenderAtlasDebugPipeline(
   });
 }
 
-export type RenderAtlasDebugPipeline = ReturnType<typeof createRenderAtlasDebugPipeline>;
+export type AtlasDebugPipeline = ReturnType<typeof createAtlasDebugPipeline>;

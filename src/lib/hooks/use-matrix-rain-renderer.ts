@@ -13,8 +13,6 @@ type UseMatrixRainRendererArgs = {
   bloom: BloomConfig;
   crt: CrtConfig;
   parallax: ParallaxConfig;
-  atlasLayer: number;
-  atlasDebug: boolean;
   paused: boolean;
   onError?: ((err: Error) => void) | undefined;
 };
@@ -140,26 +138,21 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
     const graph = graphRef.current;
     graph.resize(canvas.width, canvas.height);
 
-    if (latestArgsRef.current.atlasDebug) {
-      graph.setAtlasLayer(latestArgsRef.current.atlasLayer);
-      graph.renderAtlasDebug();
-    } else {
-      graph.setDensity(latestArgsRef.current.density);
-      graph.setStepRate(latestArgsRef.current.stepRate);
-      graph.setParallax(latestArgsRef.current.parallax);
-      graph.setBloom(latestArgsRef.current.bloom);
-      graph.setCrt(latestArgsRef.current.crt);
+    graph.setDensity(latestArgsRef.current.density);
+    graph.setStepRate(latestArgsRef.current.stepRate);
+    graph.setParallax(latestArgsRef.current.parallax);
+    graph.setBloom(latestArgsRef.current.bloom);
+    graph.setCrt(latestArgsRef.current.crt);
 
-      // Advance the simulation only while running; render every tick regardless.
-      // Rendering even when paused is deliberate: toggling paused re-renders App,
-      // which makes @typegpu/react reassign canvas.width and clear the buffer to
-      // black — repainting each frame heals that (and resize-while-paused) without
-      // moving the columns.
-      if (!latestArgsRef.current.paused) {
-        graph.step(deltaSeconds, elapsedSeconds);
-      }
-      graph.render();
+    // Advance the simulation only while running; render every tick regardless.
+    // Rendering even when paused is deliberate: toggling paused re-renders App,
+    // which makes @typegpu/react reassign canvas.width and clear the buffer to
+    // black — repainting each frame heals that (and resize-while-paused) without
+    // moving the columns.
+    if (!latestArgsRef.current.paused) {
+      graph.step(deltaSeconds, elapsedSeconds);
     }
+    graph.render();
 
     const current = graph.getColumnCount();
     if (current !== lastColumnCountRef.current) {

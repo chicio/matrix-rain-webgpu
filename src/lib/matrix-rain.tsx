@@ -136,9 +136,6 @@ function MatrixRainCanvas(props: MatrixRainProps) {
     bloom: resolveBloom(props.bloom),
     crt: resolveCrt(props.crt),
     parallax: resolveParallax(props.parallax),
-    // Atlas-debug is a demo-only diagnostic; the public component never enables it.
-    atlasLayer: 0,
-    atlasDebug: false,
     paused: props.paused ?? false,
     onError: props.onError,
   });

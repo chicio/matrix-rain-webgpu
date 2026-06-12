@@ -9,10 +9,6 @@ import {
 } from './pipelines/compute-step';
 import { createRenderGlyphsPipeline, type RenderGlyphsPipeline } from './pipelines/render-glyphs';
 import { atlasBindings } from './atlas/bindings';
-import {
-  createRenderAtlasDebugPipeline,
-  type RenderAtlasDebugPipeline,
-} from './pipelines/render-atlas-debug';
 import { blitBindings, createBlitPipeline, type BlitPipeline } from './pipelines/blit';
 import { createCrtPipeline, type CrtPipeline } from './pipelines/crt';
 import {
@@ -45,10 +41,8 @@ export type RenderGraph = {
   step: (deltaSeconds: number, elapsedSeconds: number) => void;
   settle: () => void;
   render: () => void;
-  renderAtlasDebug: () => void;
   setDensity: (density: number) => void;
   setStepRate: (stepRate: number) => void;
-  setAtlasLayer: (layer: number) => void;
   setTailRange: (range: [number, number]) => void;
   setBloom: (config: BloomConfig) => void;
   setCrt: (config: CrtConfig) => void;
@@ -103,11 +97,6 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     cellSize,
     density,
     depthDim: parallax.depthDim,
-    mousePosition: d.vec2f(0, 0),
-    mouseStrength: 0,
-    scrollVelocity: 0,
-    flags: 0,
-    atlasLayer: 0,
     bloomThreshold: bloom.threshold,
     bloomIntensity: bloom.intensity,
     scanlineStrength: crt.scanlineStrength,
@@ -147,10 +136,6 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     sampler: atlasSampler,
   });
 
-  const atlasDebugPipeline: RenderAtlasDebugPipeline = createRenderAtlasDebugPipeline(
-    root,
-    uniforms,
-  );
   const blitPipeline: BlitPipeline = createBlitPipeline(root);
   const extractPipeline: ExtractPipeline = createExtractPipeline(root, uniforms, HDR_FORMAT);
   const blurHPipeline: BlurPipeline = createBlurPipeline(root, uniforms, HDR_FORMAT, [1, 0]);
@@ -335,20 +320,12 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     finalPipeline.with(composite.bindGroup).withColorAttachment({ view: ctx }).draw(3);
   }
 
-  function renderAtlasDebug() {
-    atlasDebugPipeline.with(atlasBindGroup).withColorAttachment({ view: ctx }).draw(3);
-  }
-
   function setDensity(value: number) {
     density = value;
   }
 
   function setStepRate(value: number) {
     stepRate = value;
-  }
-
-  function setAtlasLayer(value: number) {
-    uniforms.patch({ atlasLayer: value });
   }
 
   function setTailRange(range: [number, number]) {
@@ -398,10 +375,8 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     step,
     settle,
     render,
-    renderAtlasDebug,
     setDensity,
     setStepRate,
-    setAtlasLayer,
     setTailRange,
     setBloom,
     setCrt,

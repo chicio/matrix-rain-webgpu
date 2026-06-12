@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState, type RefObject } from 'react';
 import { useConfigureContext, useFrame } from '@typegpu/react';
 
-import { GLYPH_COUNT } from '../lib/gpu/atlas/glyph-set';
-import { useMatrixRainRenderer } from '../lib/hooks/use-matrix-rain-renderer';
+import { GLYPH_COUNT } from '../../lib/gpu/atlas/glyph-set';
+import { useMatrixRainRenderer } from '../../lib/hooks/use-matrix-rain-renderer';
+import { useAtlasDebugRenderer } from '../hooks/use-atlas-debug-renderer';
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
 
@@ -80,10 +81,12 @@ function App() {
     bloom: { enabled: bloomEnabled, intensity: bloomIntensity, threshold: bloomThreshold },
     crt: { enabled: crtEnabled, scanlineStrength, aberration },
     parallax: { enabled: true, speedRange, depthDim },
-    atlasLayer,
-    atlasDebug: isAtlasDebug,
     paused,
   });
+
+  // Atlas-debug is a demo-only diagnostic — it lives here, not in the published
+  // library. It draws into the same canvas; the frame loop picks which to render.
+  const { tick: atlasTick } = useAtlasDebugRenderer({ ctxRef, atlasLayer });
 
   useFrame(({ deltaSeconds, elapsedSeconds }) => {
     if (!ctxRef.current) {
@@ -99,7 +102,11 @@ function App() {
       lastFlushRef.current = elapsedSeconds;
     }
 
-    tickRain(deltaSeconds, elapsedSeconds);
+    if (isAtlasDebug) {
+      atlasTick();
+    } else {
+      tickRain(deltaSeconds, elapsedSeconds);
+    }
   });
 
   return (
