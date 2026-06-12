@@ -6,39 +6,23 @@ sidebar:
 
 The effect is orchestrated by a single render graph (`src/gpu/render-graph.ts`) that owns the GPU resources and runs two things each frame: a **compute pass** that advances the simulation, and a **render pass chain** that draws the frame and applies post-processing.
 
-:::note
-The diagram below is ASCII for now; it will be upgraded to a Mermaid diagram.
-:::
-
 ## Per frame
 
-```
-                          ┌─────────────────────────────┐
-   simulation step ──────▶│ compute pass (compute-step) │   advances each Column:
-   (gated by stepRate)    │   Column[] storage buffer   │   headY += speed, respawn,
-                          └─────────────────────────────┘   reroll seed
-                                       │
-                                       ▼
-   ┌───────────────────────────────────────────────────────────────────────┐
-   │ render-glyphs  ──▶  HDR target (rgba16float)                            │
-   └───────────────────────────────────────────────────────────────────────┘
-                                       │
-                 bloom.enabled ?  ─────┴───────────────┐  : no
-                       │                                │
-                       ▼                                │
-   extract (½-res) ─▶ blur H ─▶ blur V ─▶ combine ─▶ combineTarget
-   (bright pass)      (A)        (B)      (scene+bloom)  │
-                       │                                │
-                       └────────────┬───────────────────┘
-                                    ▼
-                       composite = bloom ? combineTarget : HDR target
-                                    │
-                  crt.enabled ?  ───┴───────┐ : no
-                       │                     │
-                       ▼                     ▼
-                  CRT pass               blit pass     ──▶  swap chain (canvas)
-            (scanlines, aberration,   (passthrough)
-             tone-map)
+```mermaid
+flowchart TD
+  sim["compute pass · compute-step<br/>advance Column[]: headY += speed,<br/>respawn, reroll seed"] --> glyphs["render-glyphs<br/>→ HDR target (rgba16float)"]
+
+  glyphs -->|bloom enabled| extract["bright extract · ½-res"]
+  extract --> blurH["blur H"] --> blurV["blur V"] --> combine["combine<br/>scene + intensity · bloom"]
+
+  combine --> composite{{"composite"}}
+  glyphs -->|bloom off| composite
+
+  composite -->|crt enabled| crt["CRT pass<br/>aberration · scanlines · tone-map"]
+  composite -->|crt off| blit["blit · passthrough"]
+
+  crt --> swap["swap chain (canvas)"]
+  blit --> swap
 ```
 
 ## The passes

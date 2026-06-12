@@ -7,6 +7,7 @@ import typegpu from 'unplugin-typegpu/vite';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeExternalLinks from 'rehype-external-links';
+import mermaid from 'astro-mermaid';
 
 // Deployed to GitHub Pages project site: https://chicio.github.io/matrix-rain-webgpu/
 // https://astro.build/config
@@ -20,6 +21,9 @@ export default defineConfig({
 		rehypePlugins: [rehypeKatex, [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]],
 	},
 	integrations: [
+		// Renders ```mermaid code blocks client-side (no build-time headless browser).
+		// Must come before Starlight so it processes the markdown first.
+		mermaid({ theme: 'dark' }),
 		starlight({
 			title: 'matrix-rain-webgpu',
 			customCss: ['./src/styles/custom.css'],
