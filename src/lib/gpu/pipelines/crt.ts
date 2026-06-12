@@ -1,6 +1,6 @@
 import { common, d, std, tgpu, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { blitBindings } from './blit';
-import { Uniforms } from '../schemas';
+import { Uniforms } from '../schemas/uniforms';
 
 // Spacing between scanline bands, in device pixels (one full bright→bright
 // sine period). Build-time constant — the slider controls band depth, not

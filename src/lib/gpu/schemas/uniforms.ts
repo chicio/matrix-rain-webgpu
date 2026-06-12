@@ -1,13 +1,7 @@
 import { d } from 'typegpu';
 
-export const Column = d.struct({
-  headY: d.f32,
-  speed: d.f32,
-  depth: d.f32,
-  tailLength: d.f32,
-  seed: d.u32,
-});
-
+// Per-frame parameter block — backs a UNIFORM buffer: CPU-patched each frame
+// (`uniforms.patch(...)`) and read-only on the GPU, broadcast to every invocation.
 export const Uniforms = d.struct({
   time: d.f32,
   stepProgress: d.f32,

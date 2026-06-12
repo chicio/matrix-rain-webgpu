@@ -1,6 +1,6 @@
 import { common, d, std, tgpu, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { blitBindings } from './blit';
-import { Uniforms } from '../schemas';
+import { Uniforms } from '../schemas/uniforms';
 
 // Brightness extract: keep only pixels above the bloom threshold. The classic
 // soft-knee-free version — subtract the threshold per channel and clamp at 0,

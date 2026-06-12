@@ -1,6 +1,7 @@
 import { d, std, tgpu, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { randf } from '@typegpu/noise';
-import { Column, Uniforms } from '../schemas';
+import { Column } from '../schemas/column';
+import { Uniforms } from '../schemas/uniforms';
 
 export const COMPUTE_STEP_WORKGROUP_SIZE = 64;
 

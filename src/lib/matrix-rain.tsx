@@ -2,7 +2,7 @@ import { useEffect, type CSSProperties } from 'react';
 import { useConfigureContext, useFrame, useRootWithStatus } from '@typegpu/react';
 
 import { useMatrixRainRenderer } from './hooks/use-matrix-rain-renderer';
-import { PALETTE } from './gpu/palette';
+import { PALETTE } from './gpu/material/palette';
 import {
   type BloomConfig,
   type BloomOptions,

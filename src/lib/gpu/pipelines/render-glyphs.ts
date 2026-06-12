@@ -1,8 +1,9 @@
 import { common, d, std, tgpu, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import { atlasBindings } from '../atlas/bindings';
-import { brightnessJitter, glyphIndex } from '../hash';
-import { PALETTE } from '../palette';
-import { Column, Uniforms } from '../schemas';
+import { brightnessJitter, glyphIndex } from '../material/hash';
+import { PALETTE } from '../material/palette';
+import { Column } from '../schemas/column';
+import { Uniforms } from '../schemas/uniforms';
 
 // Falloff exponent — steeper than linear keeps the head visually bright longer.
 const FALLOFF_POWER = 1.5;

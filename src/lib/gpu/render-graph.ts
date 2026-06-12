@@ -1,7 +1,8 @@
 import { d, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import type { SdfAtlas } from './atlas/build-sdf-atlas';
 import type { BloomConfig, CrtConfig, ParallaxConfig } from '../types';
-import { Column, Uniforms } from './schemas';
+import { Column } from './schemas/column';
+import { Uniforms } from './schemas/uniforms';
 import {
   COMPUTE_STEP_WORKGROUP_SIZE,
   createComputeStepPipeline,

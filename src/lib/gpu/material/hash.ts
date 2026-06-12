@@ -1,6 +1,6 @@
 import { d, tgpu } from 'typegpu';
 import { randf } from '@typegpu/noise';
-import { GLYPH_COUNT } from './atlas/glyph-set';
+import { GLYPH_COUNT } from '../atlas/glyph-set';
 
 // f32 precision dictates that PRNG seeds stay small — see @typegpu/noise docs.
 // Normalize a u32 column seed into [0, 1) and a slotY into [0, ~2] per the
