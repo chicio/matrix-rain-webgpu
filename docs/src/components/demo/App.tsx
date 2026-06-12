@@ -19,6 +19,7 @@ const DEFAULT_DEPTH_DIM = 0.3;
 const DEFAULT_BLOOM_ENABLED = true;
 const DEFAULT_BLOOM_THRESHOLD = 0.8;
 const DEFAULT_BLOOM_INTENSITY = 1.5;
+const DEFAULT_BLOOM_EMISSION = 1.1;
 const DEFAULT_CRT_ENABLED = true;
 const DEFAULT_SCANLINE_STRENGTH = 0.3;
 const DEFAULT_ABERRATION = 1.0;
@@ -58,6 +59,7 @@ function App() {
   const [bloomEnabled, setBloomEnabled] = useState(DEFAULT_BLOOM_ENABLED);
   const [bloomThreshold, setBloomThreshold] = useState(DEFAULT_BLOOM_THRESHOLD);
   const [bloomIntensity, setBloomIntensity] = useState(DEFAULT_BLOOM_INTENSITY);
+  const [bloomEmission, setBloomEmission] = useState(DEFAULT_BLOOM_EMISSION);
   const [crtEnabled, setCrtEnabled] = useState(DEFAULT_CRT_ENABLED);
   const [scanlineStrength, setScanlineStrength] = useState(DEFAULT_SCANLINE_STRENGTH);
   const [aberration, setAberration] = useState(DEFAULT_ABERRATION);
@@ -89,7 +91,12 @@ function App() {
     density,
     stepRate,
     tailRange,
-    bloom: { enabled: bloomEnabled, intensity: bloomIntensity, threshold: bloomThreshold },
+    bloom: {
+      enabled: bloomEnabled,
+      intensity: bloomIntensity,
+      threshold: bloomThreshold,
+      emission: bloomEmission,
+    },
     crt: { enabled: crtEnabled, scanlineStrength, aberration },
     parallax: { speedRange, depthDim },
     paused,
@@ -150,6 +157,7 @@ function App() {
         bloomEnabled={bloomEnabled}
         bloomThreshold={bloomThreshold}
         bloomIntensity={bloomIntensity}
+        bloomEmission={bloomEmission}
         crtEnabled={crtEnabled}
         scanlineStrength={scanlineStrength}
         aberration={aberration}
@@ -171,6 +179,7 @@ function App() {
         onBloomEnabledChange={setBloomEnabled}
         onBloomThresholdChange={setBloomThreshold}
         onBloomIntensityChange={setBloomIntensity}
+        onBloomEmissionChange={setBloomEmission}
         onCrtEnabledChange={setCrtEnabled}
         onScanlineStrengthChange={setScanlineStrength}
         onAberrationChange={setAberration}

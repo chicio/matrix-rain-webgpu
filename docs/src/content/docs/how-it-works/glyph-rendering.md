@@ -89,6 +89,17 @@ $$
 
 with `baseColor = head` when `k = 0`, else `trailColor`. Cells outside the trail short-circuit to the background color.
 
+## Head emission (HDR)
+
+`brightness` is clamped to `[0,1]`, but the final glyph color is **not** — it's multiplied by an emission factor that lets the head exceed `1.0`:
+
+$$
+\text{emission} = \operatorname{mix}(1,\; \text{headEmission},\; \text{falloff}), \qquad
+\text{glyphColor} = \text{baseColor}\cdot\text{brightness}\cdot\text{emission}
+$$
+
+`headEmission` comes from `bloom.emission` (default `2`), tapering down the tail via `falloff`, so the head burns brightest. The display still clamps (the CRT tone-map), so on screen the head just reads white-hot — but the **HDR target keeps the >1.0 value**, which is exactly the headroom [bloom](/matrix-rain-webgpu/how-it-works/bloom/) extracts from. With emission, the rendered `rgb` above can exceed 1.0 at the head.
+
 ## Why it renders to HDR
 
-This pass writes into an `rgba16float` target, not the swap chain, so heads can carry brightness for the [bloom](/matrix-rain-webgpu/how-it-works/bloom/) extract and the final tone-map have real range to work with. See the [Pipeline overview](/matrix-rain-webgpu/architecture/pipeline-overview/).
+This pass writes into an `rgba16float` target, not the swap chain, so the >1.0 head emission survives for the [bloom](/matrix-rain-webgpu/how-it-works/bloom/) extract and the final tone-map have real range to work with. See the [Pipeline overview](/matrix-rain-webgpu/architecture/pipeline-overview/).

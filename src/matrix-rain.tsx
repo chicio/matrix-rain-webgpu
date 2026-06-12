@@ -26,7 +26,7 @@ const DEFAULTS: {
 } = {
   rain: { fontSize: 20, density: 0.95, stepRate: 10, tailRange: [8, 35] },
   parallax: { speedRange: [0.4, 1.5], depthDim: 0.3 },
-  bloom: { intensity: 1.5, threshold: 0.8 },
+  bloom: { intensity: 1.5, threshold: 0.8, emission: 1.1 },
   crt: { scanlineStrength: 0.3, aberration: 1.0 },
 };
 
@@ -68,6 +68,7 @@ function resolveBloom(opt: BloomOptions | false | undefined): BloomConfig {
     enabled: opt !== false,
     intensity: (opt || undefined)?.intensity ?? DEFAULTS.bloom.intensity,
     threshold: (opt || undefined)?.threshold ?? DEFAULTS.bloom.threshold,
+    emission: (opt || undefined)?.emission ?? DEFAULTS.bloom.emission,
   };
 }
 

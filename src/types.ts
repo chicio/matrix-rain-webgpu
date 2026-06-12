@@ -45,6 +45,12 @@ export interface BloomOptions {
    * @default 0.8
    */
   threshold?: number;
+  /**
+   * How hot the heads burn into the HDR target (1 = none). Values >1 push heads
+   * above the displayable range, giving the bloom real headroom to extract from.
+   * @default 1.1
+   */
+  emission?: number;
 }
 
 export interface CrtOptions {

@@ -42,6 +42,14 @@ $$ \text{out} = \text{scene} + \text{intensity}\cdot\text{bloom} $$
 
 `intensity` is `bloom.intensity` (default `1.5`). The result goes into an HDR combine target — values can exceed 1.0 here, which is what lets the [CRT](/matrix-rain-webgpu/how-it-works/crt/) tone-map step blow highlights out to white.
 
+## Head emission — giving bloom something to extract
+
+There's a catch the threshold and intensity can't fix on their own: if nothing in the scene exceeds `1.0`, there's barely anything *above the threshold* to extract, and on the bright pixels themselves `scene + intensity·bloom` just clamps back to `1.0` (no visible change). Cranking intensity multiplies a near-empty signal; lowering the threshold just blooms the whole scene uniformly. Either way the glow stays weak.
+
+The fix is **head emission**: the [glyph pass](/matrix-rain-webgpu/how-it-works/glyph-rendering/) multiplies the head by `bloom.emission` (default `2`) so it writes **above 1.0** into the HDR target — burning the head hotter than the display can show. Now the extract has real headroom (`emission − threshold` instead of `1 − threshold`), so blooming the heads produces a strong halo, and `threshold`/`intensity` actually bite.
+
+A side effect: pushing all channels past `1.0` means the head **core clamps toward white** while the green survives in the surrounding glow (the green channel dominates after the blur) — the classic white-hot head + green halo. Lower `emission` toward `1` to keep greener cores; `emission = 1` disables it (heads stay in `[0,1]`). Emission only applies while bloom is enabled.
+
 ## Why HDR + half-res
 
 - **HDR** (`rgba16float`) throughout so the extracted highlights and the `scene + intensity·bloom` sum aren't clipped before the final tone-map.

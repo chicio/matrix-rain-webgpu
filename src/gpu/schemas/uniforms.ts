@@ -11,6 +11,7 @@ export const Uniforms = d.struct({
   depthDim: d.f32,
   bloomThreshold: d.f32,
   bloomIntensity: d.f32,
+  headEmission: d.f32,
   scanlineStrength: d.f32,
   aberration: d.f32,
 });

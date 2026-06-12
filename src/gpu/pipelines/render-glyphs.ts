@@ -64,7 +64,11 @@ export function createRenderGlyphsPipeline(
 
     const trailColor = std.mix(trail, fade, std.clamp(tailProgress, 0, 1));
     const baseColor = std.select(trailColor, head, k === 0);
-    const glyphColor = baseColor * brightness;
+    // Head emission: burn the head >1.0 into the HDR target (tapering down the
+    // tail via tailFalloff), giving bloom real headroom above the displayable
+    // range. headEmission = 1 → no emission (color stays in [0,1]).
+    const emission = std.mix(1, uniforms.$.headEmission, tailFalloff);
+    const glyphColor = baseColor * brightness * emission;
     const finalRgb = std.mix(bg, glyphColor, coverage);
 
     const color = std.select(bg, finalRgb, inTail);

@@ -28,6 +28,7 @@ export type EffectsProps = {
   bloomEnabled: boolean;
   bloomThreshold: number;
   bloomIntensity: number;
+  bloomEmission: number;
   crtEnabled: boolean;
   scanlineStrength: number;
   aberration: number;
@@ -49,6 +50,7 @@ export type EffectsProps = {
   onBloomEnabledChange: (value: boolean) => void;
   onBloomThresholdChange: (value: number) => void;
   onBloomIntensityChange: (value: number) => void;
+  onBloomEmissionChange: (value: number) => void;
   onCrtEnabledChange: (value: boolean) => void;
   onScanlineStrengthChange: (value: number) => void;
   onAberrationChange: (value: number) => void;
@@ -69,6 +71,7 @@ export function Effects({
   bloomEnabled,
   bloomThreshold,
   bloomIntensity,
+  bloomEmission,
   crtEnabled,
   scanlineStrength,
   aberration,
@@ -90,6 +93,7 @@ export function Effects({
   onBloomEnabledChange,
   onBloomThresholdChange,
   onBloomIntensityChange,
+  onBloomEmissionChange,
   onCrtEnabledChange,
   onScanlineStrengthChange,
   onAberrationChange,
@@ -225,6 +229,14 @@ export function Effects({
           step={0.05}
           value={bloomThreshold}
           onChange={onBloomThresholdChange}
+        />
+        <Slider
+          label="emission"
+          min={1}
+          max={4}
+          step={0.1}
+          value={bloomEmission}
+          onChange={onBloomEmissionChange}
         />
       </Group>
 

@@ -100,6 +100,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     depthDim: parallax.depthDim,
     bloomThreshold: bloom.threshold,
     bloomIntensity: bloom.intensity,
+    headEmission: bloom.enabled ? bloom.emission : 1,
     scanlineStrength: crt.scanlineStrength,
     aberration: crt.aberration,
   });
@@ -235,6 +236,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       depthDim: parallax.depthDim,
       bloomThreshold: bloom.threshold,
       bloomIntensity: bloom.intensity,
+      headEmission: bloom.enabled ? bloom.emission : 1,
       scanlineStrength: crt.scanlineStrength,
       aberration: crt.aberration,
     });

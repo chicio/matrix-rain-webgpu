@@ -69,6 +69,7 @@ Props are organized into groups. The base look lives in `rain`; the three effect
 |-------|------|---------|---------|
 | `intensity` | `number` | `1.5` | Glow strength multiplier on the extracted bright pass. |
 | `threshold` | `number` | `0.8` | Brightness above which a pixel contributes to the glow (~0..2). |
+| `emission` | `number` | `2` | How hot heads burn into the HDR target (1 = off). >1 pushes heads above the displayable range so bloom has real headroom — see [Bloom](/matrix-rain-webgpu/how-it-works/bloom/). |
 
 `bloom={false}` skips the entire extract → blur → combine chain (a real GPU cost saving).
 
