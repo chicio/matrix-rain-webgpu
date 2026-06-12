@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState, type RefObject } from 'react';
 import { useConfigureContext, useFrame } from '@typegpu/react';
 
-import { GLYPH_COUNT } from '../../lib/gpu/atlas/glyph-set';
-import { useMatrixRainRenderer } from '../../lib/hooks/use-matrix-rain-renderer';
-import { useAtlasDebugRenderer } from '../hooks/use-atlas-debug-renderer';
+import { GLYPH_COUNT } from '@lib/gpu/atlas/glyph-set';
+import { useMatrixRainRenderer } from '@lib/hooks/use-matrix-rain-renderer';
+import { useAtlasDebugRenderer } from './hooks/use-atlas-debug-renderer';
 import { DebugPanel } from './debug-panel/DebugPanel';
 import type { RenderMode } from './debug-panel/RenderMode';
 
@@ -62,6 +62,17 @@ function App() {
   const [scanlineStrength, setScanlineStrength] = useState(DEFAULT_SCANLINE_STRENGTH);
   const [aberration, setAberration] = useState(DEFAULT_ABERRATION);
   const [paused, setPaused] = useState(false);
+  // Canvas size: "fit to window" lets the frame fill the stage (autoResize tracks
+  // it); turning it off pins explicit px dimensions so the split-purpose resize
+  // path can be exercised deliberately (width change re-seeds, height-only preserves).
+  const [fitToWindow, setFitToWindow] = useState(true);
+  const [canvasWidth, setCanvasWidth] = useState(960);
+  const [canvasHeight, setCanvasHeight] = useState(540);
+  const applyCanvasPreset = useCallback((width: number, height: number) => {
+    setFitToWindow(false);
+    setCanvasWidth(width);
+    setCanvasHeight(height);
+  }, []);
   // Debug panel open/closed — only meaningful on narrow screens, where the rail
   // becomes a slide-in drawer. On desktop the rail is always shown (CSS grid).
   const [panelOpen, setPanelOpen] = useState(false);
@@ -112,7 +123,10 @@ function App() {
   return (
     <div id="shell">
       <section id="stage">
-        <div id="canvas-frame">
+        <div
+          id="canvas-frame"
+          style={fitToWindow ? undefined : { width: canvasWidth, height: canvasHeight }}
+        >
           <canvas ref={setCanvas} />
         </div>
       </section>
@@ -140,6 +154,13 @@ function App() {
         scanlineStrength={scanlineStrength}
         aberration={aberration}
         paused={paused}
+        fitToWindow={fitToWindow}
+        canvasWidth={canvasWidth}
+        canvasHeight={canvasHeight}
+        onFitToWindowChange={setFitToWindow}
+        onCanvasWidthChange={setCanvasWidth}
+        onCanvasHeightChange={setCanvasHeight}
+        onCanvasPreset={applyCanvasPreset}
         onDensityChange={setDensity}
         onStepRateChange={setStepRate}
         onFontSizeChange={setFontSize}

@@ -3,8 +3,8 @@
 // the published package. Reuses the lib's shared atlas bind-group + palette; runs
 // off its own small uniform rather than the production Uniforms struct.
 import { common, d, std, tgpu, type TgpuRoot, type TgpuUniform } from 'typegpu';
-import { atlasBindings } from '../lib/gpu/atlas/bindings';
-import { PALETTE } from '../lib/gpu/material/palette';
+import { atlasBindings } from '@lib/gpu/atlas/bindings';
+import { PALETTE } from '@lib/gpu/material/palette';
 
 // Fraction of the smaller canvas dimension that the centered debug quad occupies.
 const QUAD_FRACTION = 0.6;

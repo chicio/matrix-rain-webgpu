@@ -1,0 +1,18 @@
+---
+// The full manual-testing demo (canvas + debug rail + observability + atlas-debug).
+// Internal demo App — imports library internals via @lib; client-only (WebGPU).
+import PlaygroundApp from '../components/demo/PlaygroundApp';
+import '../components/demo/demo.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Playground — matrix-rain-webgpu</title>
+  </head>
+  <body>
+    <PlaygroundApp client:only="react" />
+  </body>
+</html>

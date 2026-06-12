@@ -32,6 +32,13 @@ export type EffectsProps = {
   scanlineStrength: number;
   aberration: number;
   paused: boolean;
+  fitToWindow: boolean;
+  canvasWidth: number;
+  canvasHeight: number;
+  onFitToWindowChange: (value: boolean) => void;
+  onCanvasWidthChange: (value: number) => void;
+  onCanvasHeightChange: (value: number) => void;
+  onCanvasPreset: (width: number, height: number) => void;
   onDensityChange: (value: number) => void;
   onStepRateChange: (value: number) => void;
   onFontSizeChange: (value: number) => void;
@@ -66,6 +73,13 @@ export function Effects({
   scanlineStrength,
   aberration,
   paused,
+  fitToWindow,
+  canvasWidth,
+  canvasHeight,
+  onFitToWindowChange,
+  onCanvasWidthChange,
+  onCanvasHeightChange,
+  onCanvasPreset,
   onDensityChange,
   onStepRateChange,
   onFontSizeChange,
@@ -112,6 +126,32 @@ export function Effects({
           onChange={onFontSizeChange}
         />
         <Button label="Regenerate seeds" onClick={onRegenerate} />
+      </Group>
+
+      <Group title="Canvas size" disabled={false}>
+        <Toggle label="fit to window" checked={fitToWindow} onChange={onFitToWindowChange} />
+        <div className="rail-presets">
+          <Button label="HD 1280×720" onClick={() => onCanvasPreset(1280, 720)} />
+          <Button label="4:3 800×600" onClick={() => onCanvasPreset(800, 600)} />
+          <Button label="Phone 375×667" onClick={() => onCanvasPreset(375, 667)} />
+          <Button label="Square 600" onClick={() => onCanvasPreset(600, 600)} />
+        </div>
+        <Slider
+          label="width (px)"
+          min={240}
+          max={2560}
+          step={10}
+          value={canvasWidth}
+          onChange={fitToWindow ? undefined : onCanvasWidthChange}
+        />
+        <Slider
+          label="height (px)"
+          min={160}
+          max={1440}
+          step={10}
+          value={canvasHeight}
+          onChange={fitToWindow ? undefined : onCanvasHeightChange}
+        />
       </Group>
 
       <Group title="Atlas debug" milestone="diagnostic" disabled={!atlasDebugActive}>
