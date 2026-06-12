@@ -10,7 +10,9 @@
 
 **Architecture:** Two packages in one repo. The **root** is the pristine, publishable library (`src/`, flattened — no more `src/lib/`); its `package.json` carries only lib + Astro-free metadata and publishes `dist/`. The **`docs/`** folder is a self-contained **Astro + Starlight** app (own `package.json`) that imports the library source and demo components via relative paths, runs `unplugin-typegpu` in its own Vite config, renders the public `<MatrixRainWebGPU>` on the hero (dogfooding the public API) and the internal demo `App` on `/playground` (manual testing). GitHub Pages keeps deploying via Actions, now building the `docs/` app.
 
-**Tech Stack:** Astro, Starlight (`@astrojs/starlight`), `@astrojs/react` (React 19 islands, `client:only="react"` for WebGPU), `unplugin-typegpu` (Vite), KaTeX (`remark-math` + `rehype-katix`/`rehype-katex`), Mermaid (`rehype-mermaid` or `astro-mermaid`), Pagefind (Starlight built-in search). Library unchanged: TypeGPU + WebGPU + React, `tsover` for `'use gpu'` typechecking, oxlint/oxfmt.
+**Tech Stack:** Astro, Starlight (`@astrojs/starlight`), `@astrojs/react` (React 19 islands, `client:only="react"` for WebGPU), `unplugin-typegpu` (Vite) + `@vitejs/plugin-react`, KaTeX (`remark-math` + `rehype-katex`), Mermaid (`rehype-mermaid` or `astro-mermaid`), Pagefind (Starlight built-in search). Library unchanged: TypeGPU + WebGPU + React, oxlint/oxfmt.
+
+**`tsover` mechanism (do not mis-state):** the project's `'use gpu'` typechecking comes from aliasing TypeScript to `tsover` — wired in root `package.json` as `"typescript": "npm:tsover@6.0.1"` in BOTH `devDependencies` AND a top-level `overrides` block (plus `pnpm.overrides`). It is **not** a `tsconfig` field. For `docs/` to typecheck `'use gpu'` islands it needs the same `devDependencies.typescript` alias + `overrides` in `docs/package.json`. Also: the root typecheck (`npm run types` = `tsc -b`) is driven by **project references** — deleting `vite.config.ts` (Chunk 4) breaks `tsconfig.node.json`'s `include`, so that reference must be removed/retargeted in the same step.
 
 **Sequencing note:** Docs-first. Publishing `0.10.0` happens **after** the API page + How-it-works pages settle the public surface — it is tracked in the existing `docs/superpowers/plans/2026-06-07-matrix-rain-webgpu-implementation.md` (Chunk 10), not duplicated here. This plan ends at a complete, deployed docs+demo site.
 
@@ -20,13 +22,14 @@
 
 ```
 /                                  ← publishable library package (root)
-├── package.json                   (lib only: name, version, type, exports, files:["dist"], peerDeps, lib build script — NO Astro)
-├── tsconfig*.json                 (lib typecheck; tsover override stays)
+├── package.json                   (lib only, NO Astro. The publishable shape — exports, files:["dist"], deps→peerDeps, lib build — is produced by the SEPARATE publish plan, not this one; here we only keep it Astro-free + the types/check/fix scripts)
+├── tsconfig*.json                 (lib typecheck via project references; tsover override stays; the vite.config.ts reference in tsconfig.node.json is removed in Chunk 4)
 ├── .nvmrc, .oxlintrc, etc.
 ├── src/                           ← FLATTENED library (was src/lib/)
 │   ├── index.ts                   (public exports)
 │   ├── matrix-rain.tsx            (MatrixRainWebGPU)
 │   ├── types.ts
+│   ├── hooks/use-matrix-rain-renderer.ts   (used by the public component AND the demo)
 │   └── gpu/
 │       ├── feature-detect.ts
 │       ├── render-graph.ts
@@ -66,10 +69,12 @@
 - Create: `docs/package.json`, `docs/astro.config.mjs`, `docs/tsconfig.json`
 - Create: `docs/src/content.config.ts` (or `content/config.ts` per Starlight version), `docs/src/content/docs/index.mdx` (temp), `docs/src/content/docs/overview/introduction.md` (stub)
 - Create: `docs/.gitignore` (`dist/`, `.astro/`, `node_modules/`)
+- Move (pre-step): existing `docs/DESIGN.md`, `docs/GLOSSARY.md`, `docs/crt-pass.md`, `docs/superpowers/` out of `docs/`
 
-- [ ] **Step 1: Create the `docs/` Astro+Starlight project.** From repo root: `npm create astro@latest docs -- --template starlight --no-install --no-git --skip-houston`. Confirm it scaffolds `docs/astro.config.mjs`, `docs/src/content/`, `docs/package.json`. (If the CLI flags differ in the current Astro version, scaffold into a temp dir and move files into `docs/`.)
+- [ ] **Step 0: Clear `docs/` first.** `docs/` is currently NON-EMPTY (`DESIGN.md`, `GLOSSARY.md`, `crt-pass.md`, `superpowers/`) and `npm create astro` into a non-empty dir fails. Relocate them now: `git mv docs/superpowers planning/superpowers`; `mkdir -p planning/seed-docs && git mv docs/DESIGN.md docs/GLOSSARY.md docs/crt-pass.md planning/seed-docs/`. (These are *seed material* for the content chunks; Chunk 5's relocate step is now redundant — done here.) Commit this move on its own.
+- [ ] **Step 1: Create the `docs/` Astro+Starlight project.** From repo root, with `docs/` now empty: `npm create astro@latest docs -- --template starlight --no-install --no-git --skip-houston`. Confirm it scaffolds `docs/astro.config.mjs`, `docs/src/content/`, `docs/package.json`. (If the CLI flags differ in the current Astro version, scaffold into a temp dir and move files into `docs/`.)
 - [ ] **Step 2: Pin the toolchain.** Edit `docs/package.json`: ensure `react`/`react-dom` are `^19` to match the root; add scripts `dev`/`build`/`preview` (Astro defaults). Do NOT add the library as a dependency — it's imported by relative path.
-- [ ] **Step 3: Install.** `cd docs && npm install`. Verify `node_modules/` created under `docs/`.
+- [ ] **Step 3: Install.** `cd docs && npm install`. Verify `node_modules/` created. **Commit `docs/package-lock.json`** (the `.gitignore` ignores `node_modules`/`dist`/`.astro` but NOT the lockfile) — CI's `npm --prefix docs ci` requires it.
 - [ ] **Step 4: Minimal Starlight config.** In `docs/astro.config.mjs`, set `site`/`base` to match Pages (`base: '/matrix-rain-webgpu/'`), title `matrix-rain-webgpu`, and a placeholder `sidebar`. Leave React/typegpu/math/mermaid for later chunks.
 - [ ] **Step 5: Verify dev + build.** `cd docs && npm run dev` → open the placeholder Starlight site (eyeball). Then `npm run build` → expect `docs/dist/` produced, no errors.
 - [ ] **Step 6: Commit.**
@@ -97,8 +102,8 @@ import typegpu from 'unplugin-typegpu/vite';
 // inside defineConfig({...}):
 vite: { plugins: [typegpu({})], server: { fs: { allow: ['..'] } } },
 ```
-`fs.allow: ['..']` lets Vite import library source from outside `docs/`.
-- [ ] **Step 2: Path alias for the library (optional but clean).** In `astro.config.mjs` `vite.resolve.alias`, add `{ '@lib': new URL('../src', import.meta.url).pathname }` so islands import `@lib/...` instead of long `../../../src/...` chains. (Use whatever the codebase ends up flattening to; see Chunk 5.)
+`fs.allow: ['..']` lets Vite import library source from outside `docs/`. **Known risk (verify, don't assume):** `unplugin-typegpu` is a *Babel* transform that the root Vite app runs alongside `@vitejs/plugin-react`. `@astrojs/react` manages React's Vite/Babel pipeline internally, so a bare `typegpu()` in `vite.plugins` may not compose with the island transform the way it does standalone. The Chunk-2 success criterion is therefore **not** "plugin registered" but "**`'use gpu'` is actually transformed inside an `@astrojs/react` island and the rain renders**". If it doesn't compose, fall back options: pass typegpu's Babel plugin via `@astrojs/react`'s `babel` option, or build the demo island through a small standalone Vite step and import the bundle.
+- [ ] **Step 2: Path alias for the library.** In `astro.config.mjs` `vite.resolve.alias`, add `{ '@lib': fileURLToPath(new URL('../src/lib', import.meta.url)) }` — **`../src/lib` is the CURRENT location** (pre-flatten). Islands import `@lib/...`. Chunk 4 retargets this alias to `../src` after the flatten, so nothing else changes.
 - [ ] **Step 3: Hero island.** `docs/src/components/HeroRain.tsx`:
 ```tsx
 import { MatrixRainWebGPU } from '@lib'; // resolves to src/index.ts
@@ -108,7 +113,7 @@ export function HeroRain() {
 ```
 - [ ] **Step 4: Hero page.** `docs/src/pages/index.astro` — a full-bleed landing: a positioned container holding `<HeroRain client:only="react" />` as the background, with title + CTA links to `/playground`, `getting started`, and docs. `client:only="react"` is REQUIRED — WebGPU has no SSR.
 - [ ] **Step 5: Verify.** `cd docs && npm run dev` → home shows the live rain (defaults: bloom + CRT) behind the hero text. Confirm: no SSR errors, no `'use gpu'` transform errors in the console, rain animates. Then `npm run build` succeeds.
-- [ ] **Step 6: Typecheck.** Ensure the island typechecks against the lib. If tsover/`'use gpu'` types are needed for the island, mirror the root `tsconfig` typescript override in `docs/tsconfig.json` (Chunk 5 finalizes this). Run `cd docs && npx astro check` (or `tsc`) — expect clean.
+- [ ] **Step 6: Typecheck.** Ensure the island typechecks against the lib. For `'use gpu'` types, replicate the **`tsover` package.json mechanism** in `docs/package.json`: add `"typescript": "npm:tsover@6.0.1"` to `devDependencies` AND a top-level `"overrides": { "typescript": "npm:tsover@6.0.1" }` (mirroring root) — NOT a tsconfig field. Re-install. Run `cd docs && npx astro check` — expect clean.
 - [ ] **Step 7: Commit.**
 ```bash
 git add docs/ && git commit -m "feat(docs): React islands + unplugin-typegpu; hero renders public MatrixRainWebGPU"
@@ -131,6 +136,8 @@ git add docs/ && git commit -m "feat(docs): React islands + unplugin-typegpu; he
 - Move: `src/demo/demo.css` → `docs/src/components/demo/demo.css` (or `docs/src/styles/`)
 - Create: `docs/src/pages/playground.astro`
 - (Defer deleting `src/demo/index.html`, `src/demo/main.tsx`, root `vite.config.ts` to Chunk 4.)
+
+> **Expected breakage (not a regression):** the root Vite demo (`root: "src/demo"`) stops working the moment its sources move out in Step 1 — it is *superseded* by `/playground`. Chunk 1's "root demo keeps working in parallel" promise only holds through Chunk 2. From here on, `/playground` is the demo; the dead root Vite entry is formally removed in Chunk 4.
 
 - [ ] **Step 1: Move demo sources** into `docs/src/components/demo/` (use `git mv` to preserve history). Keep their internal relative imports intact; only the imports that reached into the library (`../../lib/...`, `../lib/...`) need rewriting to the `@lib` alias / new path.
 - [ ] **Step 2: Rewrite library imports** in the moved demo files to `@lib/...` (e.g. `@lib/hooks/use-matrix-rain-renderer`, `@lib/gpu/atlas/bindings`, `@lib/gpu/material/palette`). The demo legitimately uses internals — these resolve to library *source*, not the package entry, which is fine.
@@ -158,13 +165,13 @@ git add -A && git commit -m "feat(docs): migrate internal demo to /playground"
 - Modify: `docs/astro.config.mjs` alias `@lib` → `../src`
 
 - [ ] **Step 1: Delete the retired Vite entry.** Remove `src/demo/` remnants, root `vite.config.ts`, and any root `index.html`/`main.tsx`. Confirm nothing else imports them.
-- [ ] **Step 2: Flatten the library.** `git mv src/lib/index.ts src/index.ts`, `git mv src/lib/matrix-rain.tsx src/matrix-rain.tsx`, `git mv src/lib/types.ts src/types.ts`, `git mv src/lib/gpu src/gpu`. Remove the empty `src/lib/`.
+- [ ] **Step 2: Flatten the library.** `git mv src/lib/index.ts src/index.ts`, `git mv src/lib/matrix-rain.tsx src/matrix-rain.tsx`, `git mv src/lib/types.ts src/types.ts`, `git mv src/lib/hooks src/hooks`, `git mv src/lib/gpu src/gpu`. Remove the empty `src/lib/`.
 - [ ] **Step 3: Fix imports.** Library-internal imports are already relative (`./gpu/...`, `../schemas/column`, etc.) and survive the flatten unchanged *except* any that referenced `lib`. Grep to confirm: `grep -rn "/lib/\|'\.\./lib\|lib/gpu" src/ docs/` → expect zero. Update the `docs/` `@lib` alias to point at `../src`.
-- [ ] **Step 4: Root config.** Update root `tsconfig` `include`/`rootDir` to `src` (drop `src/lib`, `src/demo`). Update root `package.json`: remove `dev`/`preview` (Vite-app) scripts; keep `types`, `check`, `fix`; `build` becomes the **library** build (define in Chunk 10 — for now it can remain `tsc -b` for typecheck). The root no longer has a runnable app — that's the `docs/` site's job.
+- [ ] **Step 4: Root config.** Update root `tsconfig` `include`/`rootDir` to `src` (drop `src/lib`, `src/demo`). **Remove the `vite.config.ts` reference**: `tsconfig.node.json` (a project reference under `tsc -b`) currently `include`s `vite.config.ts`, which Step 1 deletes — so drop that reference from the root `tsconfig.json` `references` and delete/empty `tsconfig.node.json`, or `npm run types` will fail. Update root `package.json`: remove `dev`/`preview` (Vite-app) scripts; keep `types`, `check`, `fix`; `build` stays `tsc -b` for typecheck (the real **library** build for npm is defined by the separate publish plan). The root no longer has a runnable app — that's the `docs/` site's job.
 - [ ] **Step 5: Rewire deploy.** Edit `.github/workflows/deploy.yml` `build` job:
-  - Install both packages: `npm ci` (root) and `npm --prefix docs ci`.
+  - Install both packages: `npm ci` (root) and `npm --prefix docs ci` (requires the committed `docs/package-lock.json` from Chunk 1).
   - Quality gate stays: `npm run types` + `npm run check` (root).
-  - Build the site: `npm --prefix docs run build -- --base=/matrix-rain-webgpu/` (Astro reads `base` from config; pass via env/flag as needed).
+  - Build the site: `npm --prefix docs run build`. **`base` is set in `astro.config.mjs` (Chunk 1 Step 4) — `astro build` has NO `--base` CLI flag** (unlike the old `vite build --base=…` line, which is removed). Do not pass `--base`.
   - `upload-pages-artifact` `path: docs/dist`.
 - [ ] **Step 6: Verify locally.** Root: `npm run types && npm run check` clean. `docs`: `npm run build` succeeds and `/` + `/playground` render. Grep confirms no `lib/` references remain.
 - [ ] **Step 7: Commit.**
@@ -187,7 +194,7 @@ git add -A && git commit -m "refactor: retire root Vite app, flatten src/lib→s
 - Modify: `docs/package.json` (`remark-math`, `rehype-katex`, `rehype-mermaid`)
 - Create: empty stub pages for every IA node so the sidebar renders.
 
-- [ ] **Step 1: Relocate planning.** `git mv docs/superpowers planning/superpowers` (this plan already lives in `planning/`). Confirm the Astro content collection does NOT include `planning/` (it only globs `docs/src/content/docs/`). The old `docs/DESIGN.md`, `docs/GLOSSARY.md`, `docs/crt-pass.md` also move under `docs/src/content/docs/` as part of authoring (Chunks 8–10) — for now `git mv` them into a `planning/seed-docs/` holding area so `docs/` root is clean, or leave them at repo-root `docs-seed/`. (Pick one; the point is they are *seed material*, not live pages yet.)
+- [ ] **Step 1: Confirm planning relocation (done in Chunk 1 Step 0).** `superpowers/` → `planning/superpowers/` and `DESIGN.md`/`GLOSSARY.md`/`crt-pass.md` → `planning/seed-docs/` already happened in Chunk 1 Step 0 (had to, so the Astro scaffold targeted an empty `docs/`). Here just confirm the Starlight content collection globs ONLY `docs/src/content/docs/` and never `planning/`. The seed `.md` get rewritten into content pages in Chunks 8–10.
 - [ ] **Step 2: Math.** `npm i -D remark-math rehype-katex` in `docs/`; add to `astro.config.mjs` `markdown` config; import KaTeX CSS globally (Starlight `customCss`). Verify a test `$E=mc^2$` and a display block render.
 - [ ] **Step 3: Mermaid.** Add `rehype-mermaid` (or `astro-mermaid`) — verify a ```mermaid flowchart renders to SVG at build time. (Check the current recommended Mermaid-in-Astro approach; APIs shift.)
 - [ ] **Step 4: Sidebar IA.** In `astro.config.mjs` `starlight({ sidebar: [...] })`, define the four groups (Overview, Usage, Architecture, How it works) + Glossary, matching the file tree. Add a top-nav link to `/playground`.
