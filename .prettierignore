@@ -5,6 +5,14 @@
 # Project-local agent skill bundle — vendored as-is, don't reformat.
 .agents/
 
+# The docs/ Astro app is a separate package with its own formatting (Astro/Starlight
+# conventions, tabs); the root oxfmt must not touch it. Same for the lib build output.
+docs/
+dist/
+
+# Planning artifacts (transient) — hand-written prose, don't reflow.
+planning/
+
 # Lockfiles
 package-lock.json
 pnpm-lock.yaml

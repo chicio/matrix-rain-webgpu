@@ -2,6 +2,9 @@ import { defineConfig } from 'oxlint';
 import typegpu from 'eslint-plugin-typegpu';
 
 export default defineConfig({
+  // The docs/ Astro app is a separate package (own conventions + its own astro check);
+  // dist/ is the lib build output. The root linter covers only the library source.
+  ignorePatterns: ['docs/', 'dist/'],
   plugins: ['typescript', 'import', 'unicorn', 'oxc', 'react'],
   jsPlugins: ['eslint-plugin-typegpu'],
   categories: {
