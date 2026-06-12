@@ -4,10 +4,6 @@ sidebar:
   order: 3
 ---
 
-:::caution[Pre-release]
-The package isn't published to npm yet — install instructions below are provisional and will be finalized when `0.10.0` ships. Until then, the live [Playground](/matrix-rain-webgpu/playground/) is the way to try it.
-:::
-
 ## Install
 
 ```sh

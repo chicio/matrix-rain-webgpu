@@ -6,6 +6,7 @@ import react from '@astrojs/react';
 import typegpu from 'unplugin-typegpu/vite';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import rehypeExternalLinks from 'rehype-external-links';
 
 // Deployed to GitHub Pages project site: https://chicio.github.io/matrix-rain-webgpu/
 // https://astro.build/config
@@ -14,7 +15,9 @@ export default defineConfig({
 	base: '/matrix-rain-webgpu/',
 	markdown: {
 		remarkPlugins: [remarkMath],
-		rehypePlugins: [rehypeKatex],
+		// External (http) links open in a new tab — covers the GitHub source links
+		// in the docs. Internal/relative links are untouched.
+		rehypePlugins: [rehypeKatex, [rehypeExternalLinks, { target: '_blank', rel: ['noopener', 'noreferrer'] }]],
 	},
 	integrations: [
 		starlight({
@@ -28,6 +31,8 @@ export default defineConfig({
 				},
 			],
 			sidebar: [
+				// Persistent jump to the live demo — first thing in the sidebar on every page.
+				{ label: 'Playground', link: '/playground/', badge: { text: 'live', variant: 'success' } },
 				{ label: 'Overview', items: [{ autogenerate: { directory: 'overview' } }] },
 				{ label: 'Usage', items: [{ autogenerate: { directory: 'usage' } }] },
 				{ label: 'Architecture', items: [{ autogenerate: { directory: 'architecture' } }] },
