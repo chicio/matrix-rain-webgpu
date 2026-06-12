@@ -6,7 +6,7 @@
 
 **▶ Live demo & full documentation: https://chicio.github.io/matrix-rain-webgpu/**
 
-Requires a WebGPU-capable browser (recent Chrome / Edge / Safari / Firefox).
+It powers the animated background on [fabrizioduroni.it](https://www.fabrizioduroni.it). Requires a WebGPU-capable browser (recent Chrome / Edge / Safari / Firefox).
 
 ## Install
 
@@ -69,3 +69,7 @@ npm run check
 npm --prefix docs install
 npm --prefix docs run dev
 ```
+
+## Author
+
+Built by [Fabrizio Duroni](https://www.fabrizioduroni.it). If you enjoy it, a visit to the site is the best way to support the work.

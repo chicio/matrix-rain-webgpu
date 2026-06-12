@@ -26,12 +26,19 @@ export default defineConfig({
 		mermaid({ theme: 'dark' }),
 		starlight({
 			title: 'matrix-rain-webgpu',
+			logo: { src: './src/assets/logo.png', alt: 'matrix-rain-webgpu' },
+			favicon: '/favicon.ico',
 			customCss: ['./src/styles/custom.css'],
 			social: [
 				{
 					icon: 'github',
 					label: 'GitHub',
 					href: 'https://github.com/chicio/matrix-rain-webgpu',
+				},
+				{
+					icon: 'open-book',
+					label: 'fabrizioduroni.it',
+					href: 'https://www.fabrizioduroni.it',
 				},
 			],
 			sidebar: [
