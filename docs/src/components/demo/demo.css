@@ -52,9 +52,11 @@ html,
   padding: 0;
 }
 
-/* Resizable wrapper — drag the bottom-right grip to change the canvas size
-   independently of the window, exercising the split-purpose resize logic.
-   autoResize matches the drawing buffer to this element's CSS size. */
+/* Canvas wrapper. "Fit to window" (default) leaves width/height at 100% so it
+   fills the stage; the Canvas-size panel controls pin explicit px via inline
+   styles to exercise the split-purpose resize logic. autoResize matches the
+   drawing buffer to this element's CSS size. Capped to the stage so a custom
+   size never overflows — the faint grid behind shows the vacated area. */
 #canvas-frame {
   position: relative;
   width: 100%;
@@ -63,7 +65,6 @@ html,
   min-height: 160px;
   max-width: 100%;
   max-height: 100%;
-  resize: both;
   overflow: hidden;
   background: #000;
 }
@@ -72,6 +73,18 @@ html,
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Canvas-size preset buttons — wrap into a tidy 2-up grid. */
+.rail-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.rail-presets .rail-button {
+  width: 100%;
+  margin: 0;
 }
 
 #rail {
