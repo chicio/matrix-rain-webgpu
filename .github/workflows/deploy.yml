@@ -1,4 +1,4 @@
-name: Deploy demo
+name: Deploy docs site
 
 on:
   push:
@@ -26,15 +26,21 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            docs/package-lock.json
+      # Two packages: the root library and the docs/ Astro app.
       - run: npm ci
+      - run: npm --prefix docs ci
+      # Library quality gate (typecheck + lint/fmt).
       - run: npm run types
       - run: npm run check
-      # base must match the project-pages path (https://chicio.github.io/matrix-rain-webgpu/).
-      # Kept as a CLI flag so vite.config.ts stays at base "/" for local dev.
-      - run: npx vite build --base=/matrix-rain-webgpu/
+      # Build the docs+demo site. `base` (/matrix-rain-webgpu/) is set in
+      # astro.config.mjs — astro build has no --base flag.
+      - run: npm --prefix docs run build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: docs/dist
 
   deploy:
     needs: build

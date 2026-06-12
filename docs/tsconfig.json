@@ -8,8 +8,8 @@
     "types": ["@webgpu/types"],
     "baseUrl": ".",
     "paths": {
-      "@lib": ["../src/lib/index.ts"],
-      "@lib/*": ["../src/lib/*"]
+      "@lib": ["../src/index.ts"],
+      "@lib/*": ["../src/*"]
     }
   }
 }

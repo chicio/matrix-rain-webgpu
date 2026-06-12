@@ -41,10 +41,9 @@ export default defineConfig({
 		// types; the plugin is duck-typed at runtime, so the cross-version cast is safe.
 		plugins: [/** @type {any} */ (typegpu({}))],
 		resolve: {
-			// `@lib` → the CURRENT library location (src/lib). Chunk 4 retargets to ../src
-			// after the flatten; nothing else changes.
+			// `@lib` → the flattened library root (src/).
 			alias: {
-				'@lib': fileURLToPath(new URL('../src/lib', import.meta.url)),
+				'@lib': fileURLToPath(new URL('../src', import.meta.url)),
 			},
 		},
 		server: {
