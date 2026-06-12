@@ -37,6 +37,10 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
   const [columnCount, setColumnCount] = useState(0);
   const lastColumnCountRef = useRef(0);
   const atlasRef = useRef<SdfAtlas | null>(null);
+  // Once the tick throws, go inert: useFrame calls back ~60×/s, so without this
+  // a single bug would spam the console and could hang the tab. No auto-retry —
+  // a thrown renderer stays dead until the component remounts (page reload).
+  const deadRef = useRef(false);
 
   // Bake the SDF atlas once on mount; cancelable in case the component unmounts mid-bake.
   useEffect(() => {
@@ -76,6 +80,20 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
   }, [args.speedRange[0], args.speedRange[1], args.tailRange[0], args.tailRange[1]]);
 
   function tick(deltaSeconds: number, elapsedSeconds: number) {
+    if (deadRef.current) {
+      return;
+    }
+    try {
+      tickBody(deltaSeconds, elapsedSeconds);
+    } catch (err) {
+      deadRef.current = true;
+      graphRef.current?.dispose();
+      graphRef.current = null;
+      console.error('[matrix-rain] renderer stopped after error:', err);
+    }
+  }
+
+  function tickBody(deltaSeconds: number, elapsedSeconds: number) {
     const ctx = latestArgsRef.current.ctxRef.current;
     const atlas = atlasRef.current;
     if (!ctx || !atlas) {
