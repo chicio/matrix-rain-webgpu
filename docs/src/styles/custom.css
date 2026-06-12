@@ -12,3 +12,17 @@
 	--sl-color-accent: #007a1f;
 	--sl-color-accent-high: #00350d;
 }
+
+/* Hide the raw mermaid source until astro-mermaid renders it to SVG
+   (it sets data-processed="true" when done) — avoids the source flashing in. */
+pre.mermaid:not([data-processed='true']) {
+	visibility: hidden;
+}
+
+/* Header logo — rounded + matrix-green border, matching the hero logo. */
+.site-title img {
+	box-sizing: border-box;
+	border: 2px solid #00ff41;
+	border-radius: 8px;
+	box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+}
