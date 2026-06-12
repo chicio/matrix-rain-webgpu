@@ -18,7 +18,7 @@ import { MatrixRainWebGPU } from 'matrix-rain-webgpu';
 
 ## Why a WebGPU rewrite?
 
-The effect began life as a 2D `<canvas>` implementation. That version works, but every frame is CPU-driven pixel work: clearing, fading, and drawing each glyph. Moving it to the GPU lets us:
+The effect began its life as a 2D `<canvas>` implementation on [fabrizioduroni.it](https://www.fabrizioduroni.it). That version works, but every frame is CPU-driven pixel work: clearing, fading, and drawing each glyph. Moving it to the GPU lets us:
 
 - **Render every cell in parallel** in a fragment shader, instead of looping on the CPU.
 - **Advance the simulation in a compute pass**, so column state lives and updates on the GPU.
