@@ -1,5 +1,6 @@
 import { d, type TgpuMutable, type TgpuRoot, type TgpuUniform } from 'typegpu';
 import type { SdfAtlas } from './atlas/build-sdf-atlas';
+import type { BloomConfig, CrtConfig, ParallaxConfig } from '../types';
 import { Column, Uniforms } from './schemas';
 import {
   COMPUTE_STEP_WORKGROUP_SIZE,
@@ -33,15 +34,10 @@ export type CreateRenderGraphArgs = {
   cellSize: number;
   density: number;
   stepRate: number;
-  speedRange: [number, number];
   tailRange: [number, number];
-  depthDim: number;
-  bloomEnabled: boolean;
-  bloomThreshold: number;
-  bloomIntensity: number;
-  crtEnabled: boolean;
-  scanlineStrength: number;
-  aberration: number;
+  bloom: BloomConfig;
+  crt: CrtConfig;
+  parallax: ParallaxConfig;
 };
 
 export type RenderGraph = {
@@ -53,15 +49,10 @@ export type RenderGraph = {
   setDensity: (density: number) => void;
   setStepRate: (stepRate: number) => void;
   setAtlasLayer: (layer: number) => void;
-  setSpeedRange: (range: [number, number]) => void;
   setTailRange: (range: [number, number]) => void;
-  setDepthDim: (value: number) => void;
-  setBloomEnabled: (value: boolean) => void;
-  setBloomThreshold: (value: number) => void;
-  setBloomIntensity: (value: number) => void;
-  setCrtEnabled: (value: boolean) => void;
-  setScanlineStrength: (value: number) => void;
-  setAberration: (value: number) => void;
+  setBloom: (config: BloomConfig) => void;
+  setCrt: (config: CrtConfig) => void;
+  setParallax: (config: ParallaxConfig) => void;
   regenerate: () => void;
   getColumnCount: () => number;
   dispose: () => void;
@@ -100,15 +91,10 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   const { root, ctx, atlas, cellSize } = args;
   let density = args.density;
   let stepRate = args.stepRate;
-  let speedRange = args.speedRange;
   let tailRange = args.tailRange;
-  let depthDim = args.depthDim;
-  let bloomEnabled = args.bloomEnabled;
-  let bloomThreshold = args.bloomThreshold;
-  let bloomIntensity = args.bloomIntensity;
-  let crtEnabled = args.crtEnabled;
-  let scanlineStrength = args.scanlineStrength;
-  let aberration = args.aberration;
+  let bloom = args.bloom;
+  let crt = args.crt;
+  let parallax = args.parallax;
 
   const uniforms: TgpuUniform<typeof Uniforms> = root.createUniform(Uniforms, {
     time: 0,
@@ -116,16 +102,16 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     resolution: d.vec2f(0, 0),
     cellSize,
     density,
-    depthDim,
+    depthDim: parallax.depthDim,
     mousePosition: d.vec2f(0, 0),
     mouseStrength: 0,
     scrollVelocity: 0,
     flags: 0,
     atlasLayer: 0,
-    bloomThreshold,
-    bloomIntensity,
-    scanlineStrength,
-    aberration,
+    bloomThreshold: bloom.threshold,
+    bloomIntensity: bloom.intensity,
+    scanlineStrength: crt.scanlineStrength,
+    aberration: crt.aberration,
   });
 
   const atlasTexture = root
@@ -194,11 +180,11 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
   // so it gets its own bind group, rebuilt whenever those targets are.
   function createCombineBindGroup(
     scene: ReturnType<typeof createRenderTarget>,
-    bloom: ReturnType<typeof createRenderTarget>,
+    bloomTarget: ReturnType<typeof createRenderTarget>,
   ) {
     return root.createBindGroup(combineBindings, {
       scene: scene.texture.createView(d.texture2d(d.f32)),
-      bloom: bloom.texture.createView(d.texture2d(d.f32)),
+      bloom: bloomTarget.texture.createView(d.texture2d(d.f32)),
       sampler: blitSampler,
     });
   }
@@ -221,7 +207,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       columns?.buffer.destroy();
       columnCount = newCount;
       columns = root.createMutable(d.arrayOf(Column, columnCount));
-      columns.write(initialColumns(columnCount, h, cellSize, speedRange, tailRange));
+      columns.write(initialColumns(columnCount, h, cellSize, parallax.speedRange, tailRange));
       computePipeline = createComputeStepPipeline(root, columns, uniforms);
       renderPipeline = createRenderGlyphsPipeline(root, columns, uniforms, HDR_FORMAT);
     }
@@ -249,7 +235,9 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     if (!columns) {
       return;
     }
-    columns.write(initialColumns(columnCount, viewportHeight, cellSize, speedRange, tailRange));
+    columns.write(
+      initialColumns(columnCount, viewportHeight, cellSize, parallax.speedRange, tailRange),
+    );
   }
 
   function step(deltaSeconds: number, elapsedSeconds: number) {
@@ -258,11 +246,11 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     uniforms.patch({
       time: elapsedSeconds,
       density,
-      depthDim,
-      bloomThreshold,
-      bloomIntensity,
-      scanlineStrength,
-      aberration,
+      depthDim: parallax.depthDim,
+      bloomThreshold: bloom.threshold,
+      bloomIntensity: bloom.intensity,
+      scanlineStrength: crt.scanlineStrength,
+      aberration: crt.aberration,
     });
     const workgroupCount = Math.ceil(columnCount / COMPUTE_STEP_WORKGROUP_SIZE);
     while (stepAccumulator >= stepInterval) {
@@ -285,7 +273,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
       return;
     }
     const rows = viewportHeight / cellSize;
-    const averageSpeed = Math.max((speedRange[0] + speedRange[1]) / 2, 0.0001);
+    const averageSpeed = Math.max((parallax.speedRange[0] + parallax.speedRange[1]) / 2, 0.0001);
     const iterations = Math.max(1, Math.ceil(rows / averageSpeed));
     const stepInterval = 1 / stepRate;
     for (let i = 0; i < iterations; i++) {
@@ -311,7 +299,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     // pass: the bloom-combined target if bloom ran, otherwise the raw glyphs.
     let composite = hdrTarget;
     if (
-      bloomEnabled &&
+      bloom.enabled &&
       extractTarget &&
       blurTargetA &&
       blurTargetB &&
@@ -343,7 +331,7 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
 
     // Final pass → swap chain. CRT stamps scanlines + aberration + tone-map;
     // when off, a plain passthrough blit (same as pre-M7).
-    const finalPipeline = crtEnabled ? crtPipeline : blitPipeline;
+    const finalPipeline = crt.enabled ? crtPipeline : blitPipeline;
     finalPipeline.with(composite.bindGroup).withColorAttachment({ view: ctx }).draw(3);
   }
 
@@ -363,40 +351,24 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     uniforms.patch({ atlasLayer: value });
   }
 
-  function setSpeedRange(range: [number, number]) {
-    speedRange = range;
-  }
-
   function setTailRange(range: [number, number]) {
     tailRange = range;
   }
 
-  function setDepthDim(value: number) {
-    depthDim = value;
+  // bloom / crt are read every frame (render-path gate + uniform patch), so a
+  // plain reassignment lands on the next tick. parallax.depthDim is likewise
+  // per-frame, but parallax.speedRange is init-time — it only takes effect on
+  // the next regenerate()/resize() (the hook drives that on a speed change).
+  function setBloom(config: BloomConfig) {
+    bloom = config;
   }
 
-  function setBloomEnabled(value: boolean) {
-    bloomEnabled = value;
+  function setCrt(config: CrtConfig) {
+    crt = config;
   }
 
-  function setBloomThreshold(value: number) {
-    bloomThreshold = value;
-  }
-
-  function setBloomIntensity(value: number) {
-    bloomIntensity = value;
-  }
-
-  function setCrtEnabled(value: boolean) {
-    crtEnabled = value;
-  }
-
-  function setScanlineStrength(value: number) {
-    scanlineStrength = value;
-  }
-
-  function setAberration(value: number) {
-    aberration = value;
+  function setParallax(config: ParallaxConfig) {
+    parallax = config;
   }
 
   function dispose() {
@@ -430,15 +402,10 @@ export function createRenderGraph(args: CreateRenderGraphArgs): RenderGraph {
     setDensity,
     setStepRate,
     setAtlasLayer,
-    setSpeedRange,
     setTailRange,
-    setDepthDim,
-    setBloomEnabled,
-    setBloomThreshold,
-    setBloomIntensity,
-    setCrtEnabled,
-    setScanlineStrength,
-    setAberration,
+    setBloom,
+    setCrt,
+    setParallax,
     regenerate,
     getColumnCount,
     dispose,

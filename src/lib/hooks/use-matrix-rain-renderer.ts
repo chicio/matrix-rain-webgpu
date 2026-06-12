@@ -2,24 +2,21 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { useRoot } from '@typegpu/react';
 import { buildSdfAtlas, type SdfAtlas } from '../gpu/atlas/build-sdf-atlas';
 import { createRenderGraph, type RenderGraph } from '../gpu/render-graph';
+import type { BloomConfig, CrtConfig, ParallaxConfig } from '../types';
 
 type UseMatrixRainRendererArgs = {
   ctxRef: RefObject<GPUCanvasContext | null>;
   cellSize: number;
   density: number;
   stepRate: number;
+  tailRange: [number, number];
+  bloom: BloomConfig;
+  crt: CrtConfig;
+  parallax: ParallaxConfig;
   atlasLayer: number;
   atlasDebug: boolean;
-  speedRange: [number, number];
-  tailRange: [number, number];
-  depthDim: number;
-  bloomEnabled: boolean;
-  bloomThreshold: number;
-  bloomIntensity: number;
-  crtEnabled: boolean;
-  scanlineStrength: number;
-  aberration: number;
   paused: boolean;
+  onError?: ((err: Error) => void) | undefined;
 };
 
 export type MatrixRainRenderer = {
@@ -66,18 +63,21 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
   }, [args.cellSize]);
 
   // Speed/tail ranges only affect per-column init, so a change re-rolls all
-  // columns. Keyed on the primitive endpoints (not the array refs) so the
-  // effect fires exactly when a value moves, regardless of array identity.
+  // columns. Keyed on the primitive endpoints (extracted to locals, not the
+  // array refs) so the effect fires exactly when a value moves, regardless of
+  // array identity.
+  const [speedMin, speedMax] = args.parallax.speedRange;
+  const [tailMin, tailMax] = args.tailRange;
   useEffect(() => {
     const graph = graphRef.current;
     if (!graph) {
       return;
     }
-    graph.setSpeedRange(args.speedRange);
+    graph.setParallax(args.parallax);
     graph.setTailRange(args.tailRange);
     graph.regenerate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [args.speedRange[0], args.speedRange[1], args.tailRange[0], args.tailRange[1]]);
+  }, [speedMin, speedMax, tailMin, tailMax]);
 
   function tick(deltaSeconds: number, elapsedSeconds: number) {
     if (deadRef.current) {
@@ -89,7 +89,13 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       deadRef.current = true;
       graphRef.current?.dispose();
       graphRef.current = null;
-      console.error('[matrix-rain] renderer stopped after error:', err);
+      const error = err instanceof Error ? err : new Error(String(err));
+      const onError = latestArgsRef.current.onError;
+      if (onError) {
+        onError(error);
+      } else {
+        console.error('[matrix-rain] renderer stopped after error:', error);
+      }
     }
   }
 
@@ -97,6 +103,19 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
     const ctx = latestArgsRef.current.ctxRef.current;
     const atlas = atlasRef.current;
     if (!ctx || !atlas) {
+      return;
+    }
+    // @typegpu/react's autoResize sizes the drawing buffer inside a ResizeObserver
+    // callback, which on Safari lands AFTER the first rAF (Chrome applies it before
+    // first paint). Until then the buffer is the HTML canvas default 300×150; since
+    // the canvas is CSS-stretched to fill its parent, rendering at that size flashes
+    // one frame of magnified glyphs. Skip until the buffer leaves the default — any
+    // resize away from it unblocks, so this never permanently stalls.
+    const canvas = ctx.canvas;
+    const bufferIsDefault = canvas.width === 300 && canvas.height === 150;
+    const elementIsLarger =
+      'clientWidth' in canvas && (canvas.clientWidth !== 300 || canvas.clientHeight !== 150);
+    if (bufferIsDefault && elementIsLarger) {
       return;
     }
     if (!graphRef.current) {
@@ -107,15 +126,10 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
         cellSize: latestArgsRef.current.cellSize,
         density: latestArgsRef.current.density,
         stepRate: latestArgsRef.current.stepRate,
-        speedRange: latestArgsRef.current.speedRange,
         tailRange: latestArgsRef.current.tailRange,
-        depthDim: latestArgsRef.current.depthDim,
-        bloomEnabled: latestArgsRef.current.bloomEnabled,
-        bloomThreshold: latestArgsRef.current.bloomThreshold,
-        bloomIntensity: latestArgsRef.current.bloomIntensity,
-        crtEnabled: latestArgsRef.current.crtEnabled,
-        scanlineStrength: latestArgsRef.current.scanlineStrength,
-        aberration: latestArgsRef.current.aberration,
+        bloom: latestArgsRef.current.bloom,
+        crt: latestArgsRef.current.crt,
+        parallax: latestArgsRef.current.parallax,
       });
       // Settle once at birth so the very first frame is full (matters when
       // mounted with paused=true; also avoids the empty-then-fill startup ramp).
@@ -124,7 +138,6 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
       graphRef.current = graph;
     }
     const graph = graphRef.current;
-    const canvas = ctx.canvas;
     graph.resize(canvas.width, canvas.height);
 
     if (latestArgsRef.current.atlasDebug) {
@@ -133,13 +146,9 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
     } else {
       graph.setDensity(latestArgsRef.current.density);
       graph.setStepRate(latestArgsRef.current.stepRate);
-      graph.setDepthDim(latestArgsRef.current.depthDim);
-      graph.setBloomEnabled(latestArgsRef.current.bloomEnabled);
-      graph.setBloomThreshold(latestArgsRef.current.bloomThreshold);
-      graph.setBloomIntensity(latestArgsRef.current.bloomIntensity);
-      graph.setCrtEnabled(latestArgsRef.current.crtEnabled);
-      graph.setScanlineStrength(latestArgsRef.current.scanlineStrength);
-      graph.setAberration(latestArgsRef.current.aberration);
+      graph.setParallax(latestArgsRef.current.parallax);
+      graph.setBloom(latestArgsRef.current.bloom);
+      graph.setCrt(latestArgsRef.current.crt);
 
       // Advance the simulation only while running; render every tick regardless.
       // Rendering even when paused is deliberate: toggling paused re-renders App,
