@@ -1,6 +1,9 @@
 // @ts-check
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import react from '@astrojs/react';
+import typegpu from 'unplugin-typegpu/vite';
 
 // Deployed to GitHub Pages project site: https://chicio.github.io/matrix-rain-webgpu/
 // https://astro.build/config
@@ -29,5 +32,24 @@ export default defineConfig({
 				},
 			],
 		}),
+		react(),
 	],
+	vite: {
+		// unplugin-typegpu transforms the library's `'use gpu'` shader code (Babel).
+		// It must run over the lib source imported by the demo/hero islands.
+		// Cast: root (Vite 8/rolldown) and docs (Vite 6/rollup) ship different Plugin
+		// types; the plugin is duck-typed at runtime, so the cross-version cast is safe.
+		plugins: [/** @type {any} */ (typegpu({}))],
+		resolve: {
+			// `@lib` → the CURRENT library location (src/lib). Chunk 4 retargets to ../src
+			// after the flatten; nothing else changes.
+			alias: {
+				'@lib': fileURLToPath(new URL('../src/lib', import.meta.url)),
+			},
+		},
+		server: {
+			// Allow importing library source from outside the docs/ root.
+			fs: { allow: ['..'] },
+		},
+	},
 });

@@ -1,17 +1,36 @@
 {
-  "name": "docs",
+  "name": "matrix-rain-webgpu-docs",
   "type": "module",
   "version": "0.0.1",
+  "private": true,
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check": "astro check"
   },
   "dependencies": {
+    "@astrojs/react": "^5.0.7",
     "@astrojs/starlight": "^0.40.0",
+    "@typegpu/noise": "^0.11.0",
+    "@typegpu/react": "^0.11.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "astro": "^6.4.5",
-    "sharp": "^0.34.5"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "sharp": "^0.34.5",
+    "typegpu": "^0.11.6"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "@webgpu/types": "^0.1.70",
+    "typescript": "npm:tsover@6.0.1",
+    "unplugin-typegpu": "^0.11.4"
+  },
+  "overrides": {
+    "typescript": "npm:tsover@6.0.1"
   }
 }
