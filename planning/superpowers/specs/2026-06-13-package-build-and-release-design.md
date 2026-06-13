@@ -3,7 +3,7 @@
 **Date:** 2026-06-13
 **Status:** Draft for review
 **Scope:** the `matrix-rain-webgpu` repo only. Build system (SP-B), release automation
-(SP-C), the versioning scheme, and a `RELEASING.md`. The chicio-blog validation harness
+(SP-C), the versioning scheme, and a `RELEASE.md`. The chicio-blog validation harness
 (SP-A — `Matrix2DCanvas` extraction + WebGPU/fallback orchestrator + paused parity) is a
 **separate, later spec** in the chicio-blog repo, brainstormed after `1.0.0-beta.0` ships.
 
@@ -186,7 +186,7 @@ Enter the **1.0.0 line via a prerelease**, not `0.1.0`.
 - The first `CHANGELOG.md` covers commits since `0.9.0` → `1.0.0-beta.0` (correct: everything
   since the last milestone).
 
-## 6. `RELEASING.md` (maintainer runbook — first-class deliverable)
+## 6. `RELEASE.md` (maintainer runbook — first-class deliverable)
 
 A maintainer doc at the **repo root** — NOT a section on the public Starlight site
 (consumers don't release the package; it would be noise there). It must be a **self-contained
