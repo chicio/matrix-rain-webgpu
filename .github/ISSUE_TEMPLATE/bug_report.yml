@@ -1,0 +1,58 @@
+name: Bug report
+description: Report a problem with matrix-rain-webgpu
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug! WebGPU behaviour varies a lot by browser, OS, and GPU,
+        so the environment fields below genuinely matter for diagnosis.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Steps to reproduce — ideally a minimal repro (StackBlitz/CodeSandbox link or a small snippet).
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      description: Output of `npm ls matrix-rain-webgpu`.
+      placeholder: 1.0.0-beta.0
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & version
+      placeholder: Chrome 139 / Safari 18.5 / Firefox 130
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS & version
+      placeholder: macOS 15.5 / Windows 11 / Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: gpu
+    attributes:
+      label: WebGPU / GPU info
+      description: |
+        Does `navigator.gpu` exist? If on Chrome, paste the "GPU" section from `chrome://gpu`.
+        Otherwise note your GPU/adapter. Mention if the issue follows sleep/resume or a tab being backgrounded.
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Any errors or warnings, including `[matrix-rain]` messages (e.g. a "GPUDevice lost" warning).
+      render: shell
