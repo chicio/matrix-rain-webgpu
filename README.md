@@ -11,10 +11,17 @@ It powers the animated background on [fabrizioduroni.it](https://www.fabriziodur
 ## Install
 
 ```sh
-npm install matrix-rain-webgpu
+npm install matrix-rain-webgpu react react-dom typegpu @typegpu/react @typegpu/noise
 ```
 
-`react` and `react-dom` (v19) are peer dependencies.
+`react`/`react-dom` (v19) and `typegpu`/`@typegpu/react`/`@typegpu/noise` (v0.11) are
+peer dependencies — they must resolve to a single instance in your app, so you install
+them yourself. The shaders are pre-compiled at publish time, so you do **not** need any
+TypeGPU build plugin.
+
+> **Module resolution:** the published types target bundler-style resolution
+> (`moduleResolution: "bundler"` / `"node"`), which is what Vite, Next.js, and most React
+> setups use. Strict `"node16"`/`"nodenext"` resolution isn't supported yet.
 
 ## Usage
 
