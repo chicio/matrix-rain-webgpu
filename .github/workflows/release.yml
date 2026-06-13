@@ -21,10 +21,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # full history so conventional-changelog can diff tags
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .nvmrc # matches deploy.yml (Node 24)
       - run: npm install -g npm@latest # trusted publishing needs npm >= 11.5.1

@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Library build + quality gate. deploy.yml already validates types/lint and the
+# docs build on every push/PR; this fills the gap by verifying the publishable
+# library build (Vite + declarations) and that the package contents stay correct.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run types
+      - run: npm run build
+      - run: npm pack --dry-run
