@@ -72,4 +72,4 @@ npm --prefix docs run dev
 
 ## Author
 
-Built by [Fabrizio Duroni](https://www.fabrizioduroni.it). If you enjoy it, a visit to the site is the best way to support the work.
+Built by [Fabrizio Duroni](https://www.fabrizioduroni.it). If you enjoy it, a visit to the site is the best way to support the work. Also don't foget to star this repository :star:
