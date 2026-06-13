@@ -7,7 +7,7 @@ sidebar:
 ## Install
 
 ```sh
-npm install matrix-rain-webgpu
+npm install matrix-rain-webgpu react react-dom typegpu @typegpu/react @typegpu/noise
 ```
 
 `react` and `react-dom` (v19) are peer dependencies — you'll already have them in a React app.
