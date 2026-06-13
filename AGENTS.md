@@ -91,9 +91,14 @@ break the `'use gpu'` registry / React hooks). Keep them peers.
   `@ts-ignore` / `@ts-expect-error` to make it pass — solve the underlying problem (e.g.
   `useSyncExternalStore` for client-only detection instead of setState-in-effect). If a
   suppression is genuinely unavoidable, surface it explicitly as a decision, never bury it.
-- **Conventional Commits.** `feat:` / `fix:` / `feat!:`(or `BREAKING CHANGE:`) drive the
-  version + changelog; `docs:`/`chore:`/`refactor:`/`build:`/`ci:` don't release. Commit
-  messages decide the release, so write them deliberately.
+- **Conventional Commits + gitmoji.** Format: `<type>(<scope>): :emoji: <description>` — a
+  [gitmoji](https://gitmoji.dev) shortcode after the colon. Examples:
+  `feat(bloom): :sparkles: tunable head emission`, `fix: :bug: …`, `docs: :memo: …`,
+  `chore: :wrench: …` (config), `chore: :rocket: …` (release/deploy), `refactor: :recycle: …`,
+  `perf: :zap: …`, `ci: :green_heart: …`. The **type leads**, so `feat:`/`fix:`/`feat!:`(or
+  `BREAKING CHANGE:`) still drive the version + changelog (minor/patch/major); `docs`/`chore`/
+  `refactor`/`build`/`ci` don't release. The gitmoji sits in the subject and doesn't affect
+  parsing. Commit messages decide the release — write them deliberately.
 
 ## Documentation sync (HARD)
 
