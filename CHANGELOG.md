@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.0](https://github.com/chicio/matrix-rain-webgpu/compare/1.0.0-beta.1...1.0.0) (2026-06-13)
+
+### Bug Fixes
+
+* **renderer:** :recycle: drop sleep/background debug probes; document context-loss as known v1 limit ([ea68ae1](https://github.com/chicio/matrix-rain-webgpu/commit/ea68ae116bddaa007d37b7c0a42b276ed1c5c947))
+
+### Performance Improvements
+
+* :zap: memoize debug-panel so a slider drag re-renders one control ([7be39cb](https://github.com/chicio/matrix-rain-webgpu/commit/7be39cb989b82e05bd25fa6fa2dfcfa209e92f8a))
+
 ## [1.0.0-beta.1](https://github.com/chicio/matrix-rain-webgpu/compare/1.0.0-beta.0...1.0.0-beta.1) (2026-06-13)
 
 ## [1.0.0-beta.0](https://github.com/chicio/matrix-rain-webgpu/compare/0.9.0...1.0.0-beta.0) (2026-06-13)
