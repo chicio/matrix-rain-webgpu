@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.0.0-beta.1](https://github.com/chicio/matrix-rain-webgpu/compare/1.0.0-beta.0...1.0.0-beta.1) (2026-06-13)
+
 ## [1.0.0-beta.0](https://github.com/chicio/matrix-rain-webgpu/compare/0.9.0...1.0.0-beta.0) (2026-06-13)
 
 ### Features
