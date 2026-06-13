@@ -186,13 +186,35 @@ Enter the **1.0.0 line via a prerelease**, not `0.1.0`.
 - The first `CHANGELOG.md` covers commits since `0.9.0` → `1.0.0-beta.0` (correct: everything
   since the last milestone).
 
-## 6. `RELEASING.md`
+## 6. `RELEASING.md` (maintainer runbook — first-class deliverable)
 
-A short maintainer doc at the **repo root** — NOT a section on the public Starlight site
-(consumers don't release the package; it would be noise there). With release-it + the Action
-doing the work, it stays brief: the one-time local bootstrap publish + trusted-publishing
-setup, which `workflow_dispatch` increment to pick for beta vs graduate, how the changelog +
-GH release + provenance are generated, and the dry-run-first tip.
+A maintainer doc at the **repo root** — NOT a section on the public Starlight site
+(consumers don't release the package; it would be noise there). It must be a **self-contained
+runbook**: the maintainer may return to it cold weeks/months later and follow it step by step
+without re-deriving anything. It is a tracked deliverable in the implementation plan, written
+and verified as part of SP-C (not tacked on afterwards).
+
+Required contents:
+- **One-time setup (bootstrap):** the local first publish of `1.0.0-beta.0` (authenticated
+  npm session + OTP), then how to configure trusted publishing on npmjs.com (link the package
+  to `release.yml`; select the "publish" allowed action). Clearly marked "do this once".
+- **Dry-run first (always):** how to run the release workflow with `dry_run: true` to verify
+  the computed version, changelog diff, and publish plan **before** anything is published or
+  tagged — and what to eyeball in the output. Framed as the mandatory first step of every
+  real release.
+- **Cut a beta:** which `workflow_dispatch` increment to choose — `major-beta` for the very
+  first `1.0.0-beta.0`, `beta` for each subsequent `1.0.0-beta.N`. Note these land under the
+  npm `beta` dist-tag (`npm i matrix-rain-webgpu@beta`), leaving `@latest` untouched.
+- **Graduate to a stable release:** the increment to pick to move from beta → `1.0.0` (and
+  `patch`/`minor`/`major` for releases thereafter), landing on `@latest`.
+- **What happens automatically:** version bump + `CHANGELOG.md` from conventional commits,
+  the git tag + bump commit pushed to `main`, the GitHub release created, and provenance
+  attached — so the maintainer knows what NOT to do by hand.
+- **Gotchas:** the bump commit also redeploys the docs site (expected); branch-protection
+  exemption needed if required-reviews are ever added to `main`; trusted publishing needs
+  npm ≥ 11.5.1 (the workflow handles this, noted for context).
+- **Commit-message reminder:** releases are only as good as the conventional commits feeding
+  them — a one-line pointer to the `feat:`/`fix:`/`feat!:` convention that drives the bump.
 
 ## 7. Verification spikes (do first within SP-B)
 
