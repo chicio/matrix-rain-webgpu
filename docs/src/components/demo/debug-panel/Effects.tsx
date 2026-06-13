@@ -1,3 +1,5 @@
+import { memo, useCallback } from 'react';
+
 import { Group } from './Group';
 import { Slider } from './Slider';
 import { Toggle } from './Toggle';
@@ -58,7 +60,7 @@ export type EffectsProps = {
   onRegenerate: () => void;
 };
 
-export function Effects({
+export const Effects = memo(function Effects({
   density,
   stepRate,
   fontSize,
@@ -100,6 +102,26 @@ export function Effects({
   onPausedChange,
   onRegenerate,
 }: EffectsProps) {
+  // Stable handlers for the paired range sliders. The inline closures were
+  // re-created every render, defeating the memoized Slider; these only change
+  // when their own range does, so the other sliders bail out.
+  const handleSpeedMin = useCallback(
+    (value: number) => onSpeedRangeChange([value, speedRange[1]]),
+    [onSpeedRangeChange, speedRange],
+  );
+  const handleSpeedMax = useCallback(
+    (value: number) => onSpeedRangeChange([speedRange[0], value]),
+    [onSpeedRangeChange, speedRange],
+  );
+  const handleTailMin = useCallback(
+    (value: number) => onTailRangeChange([value, tailRange[1]]),
+    [onTailRangeChange, tailRange],
+  );
+  const handleTailMax = useCallback(
+    (value: number) => onTailRangeChange([tailRange[0], value]),
+    [onTailRangeChange, tailRange],
+  );
+
   return (
     <div className="rail-section">
       <h3 className="rail-heading">Effects</h3>
@@ -176,7 +198,7 @@ export function Effects({
           max={2}
           step={0.1}
           value={speedRange[0]}
-          onChange={(value) => onSpeedRangeChange([value, speedRange[1]])}
+          onChange={handleSpeedMin}
         />
         <Slider
           label="speed max"
@@ -184,7 +206,7 @@ export function Effects({
           max={2}
           step={0.1}
           value={speedRange[1]}
-          onChange={(value) => onSpeedRangeChange([speedRange[0], value])}
+          onChange={handleSpeedMax}
         />
         <Slider
           label="tail min"
@@ -192,7 +214,7 @@ export function Effects({
           max={40}
           step={1}
           value={tailRange[0]}
-          onChange={(value) => onTailRangeChange([value, tailRange[1]])}
+          onChange={handleTailMin}
         />
         <Slider
           label="tail max"
@@ -200,7 +222,7 @@ export function Effects({
           max={40}
           step={1}
           value={tailRange[1]}
-          onChange={(value) => onTailRangeChange([tailRange[0], value])}
+          onChange={handleTailMax}
         />
         <Slider
           label="depthDim"
@@ -265,4 +287,4 @@ export function Effects({
       </Group>
     </div>
   );
-}
+});

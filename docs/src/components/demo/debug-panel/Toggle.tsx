@@ -1,10 +1,12 @@
+import { memo } from 'react';
+
 type ToggleProps = {
   label: string;
   checked?: boolean | undefined;
   onChange?: ((value: boolean) => void) | undefined;
 };
 
-export function Toggle({ label, checked, onChange }: ToggleProps) {
+export const Toggle = memo(function Toggle({ label, checked, onChange }: ToggleProps) {
   const disabled = !onChange;
   return (
     <label className="rail-row">
@@ -17,4 +19,4 @@ export function Toggle({ label, checked, onChange }: ToggleProps) {
       <span>{label}</span>
     </label>
   );
-}
+});

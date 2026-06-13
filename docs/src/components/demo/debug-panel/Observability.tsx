@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import type { RefObject } from 'react';
 
 type Props = {
@@ -15,7 +15,9 @@ type LogEntry = {
 
 const MAX_LOG_ENTRIES = 50;
 
-export function Observability({ canvasRef, fpsRef, columnCount }: Props) {
+// memo: props are stable refs + a rarely-changing columnCount, so this bails out
+// of the panel's per-slider-drag re-render churn (its own state drives updates).
+export const Observability = memo(function Observability({ canvasRef, fpsRef, columnCount }: Props) {
   const [size, setSize] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
   const [dpr, setDpr] = useState(1);
   const [errors, setErrors] = useState<LogEntry[]>([]);
@@ -90,4 +92,4 @@ export function Observability({ canvasRef, fpsRef, columnCount }: Props) {
       </div>
     </div>
   );
-}
+});
