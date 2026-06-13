@@ -115,6 +115,20 @@ export function MatrixRainWebGPU(props: MatrixRainProps) {
     }
   }, [status, initError, onError]);
 
+  // Diagnostic probe (not a fix): when macOS sleeps, the OS tears down the GPU
+  // context and the browser surfaces a lost GPUDevice (reason "unknown"), which
+  // leaves the render loop submitting to a dead device — black screen until a
+  // reload. We don't yet re-acquire the device, so this just confirms the cause
+  // in the console; the recovery path is a separate piece of work.
+  useEffect(() => {
+    if (root.status !== 'resolved') {
+      return;
+    }
+    root.value.device.lost.then((info: GPUDeviceLostInfo) => {
+      console.warn('[matrix-rain] GPUDevice lost:', info.reason, info.message);
+    });
+  }, [root]);
+
   // Pending (root still initializing) or rejected → render nothing. Only once the
   // root is resolved do we mount the inner component, whose useRoot() is then safe.
   if (status !== 'resolved') {
