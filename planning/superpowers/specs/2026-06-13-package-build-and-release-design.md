@@ -22,10 +22,11 @@ iteration produces a changelog entry documenting what it fixed.
 
 1. **SP-B — build system** (Vite library mode; pre-transformed shaders; exports/peerDeps).
 2. **SP-C — release automation** (release-it + conventional-changelog, run from a GitHub
-   Actions workflow with npm provenance).
-3. **Publish `1.0.0-beta.0`** to npm under the `beta` dist-tag.
+   Actions workflow with **OIDC trusted publishing**, tokenless).
+3. **Bootstrap publish `1.0.0-beta.0` locally** — the one-time manual publish that creates
+   the package on npm (OIDC cannot do a first publish), then configure trusted publishing.
 4. **SP-A (separate spec)** — validate in chicio-blog against the published beta; iterate
-   `beta.1`, `beta.2`… as fixes land.
+   `beta.1`, `beta.2`… via the CI workflow (now tokenless) as fixes land.
 5. **Graduate to `1.0.0`** once chicio-blog confirms it and the device-loss fix lands.
 6. Repoint the chicio-blog PR from `@beta` → `1.0.0`.
 
@@ -112,7 +113,7 @@ on:
         default: false
 permissions:
   contents: write      # push the bump/changelog commit + tag, create the GH release
-  id-token: write      # OIDC token for npm provenance
+  id-token: write      # OIDC token for trusted publishing (+ automatic provenance)
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -120,9 +121,8 @@ jobs:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }                      # full history for changelog diffing
       - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org    # .npmrc reads NODE_AUTH_TOKEN
+        with: { node-version: 22 }
+      - run: npm install -g npm@latest                # trusted publishing needs npm >= 11.5.1
       - run: npm ci
       - run: |
           git config user.name  "github-actions[bot]"
@@ -130,16 +130,18 @@ jobs:
       - run: npx release-it <mapped-args> ${{ inputs.dry_run && '--dry-run' || '' }} --ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: "true"
+          # No NPM_TOKEN — OIDC trusted publishing authenticates the publish.
 ```
 
-### Why CI (the modern payoff)
-`id-token: write` + `NPM_CONFIG_PROVENANCE: true` enable **npm provenance**: publishing from
-Actions with an OIDC token makes npm attach a signed attestation (recorded in Sigstore's
-public transparency log) tying the tarball to the exact commit + workflow. The npm package
-page then shows "Built and signed on GitHub Actions". This is only obtainable by publishing
-from CI.
+### Why CI + trusted publishing (the modern payoff)
+**OIDC trusted publishing** eliminates long-lived npm tokens: with `id-token: write`, the
+workflow exchanges a short-lived OIDC token for publish auth — nothing secret is stored in
+the repo. npm itself steers CI/CD here (the Automation-token UI now warns against tokens).
+As a free side-effect, **provenance is automatic** — the npm CLI generates and publishes a
+signed attestation (Sigstore transparency log) tying the tarball to the exact commit +
+workflow, and the package page shows "Built and signed on GitHub Actions". No `--provenance`
+flag needed. Requirements: `id-token: write` and **npm ≥ 11.5.1** (hence the npm upgrade
+step — Node 22 ships an older npm).
 
 ### `workflow_dispatch` increment → release-it args (finalised in implementation)
 - `major-beta` → `release-it major --preRelease=beta`  (the `1.0.0-beta.0` jump)
@@ -147,12 +149,20 @@ from CI.
 - `patch`/`minor`/`major` → graduate / normal releases
 - `dry_run: true` → append `--dry-run` (used for the first end-to-end test, publishes nothing)
 
-### Secrets / prerequisites (maintainer account actions)
-- **`NPM_TOKEN`** repo secret — a classic **Automation** npm token (bypasses 2FA; required
-  for unattended CI). Account-wide because the package doesn't exist yet, so a granular
-  package-scoped token has nothing to target on first publish. After `1.0.0-beta.0` exists,
-  optionally switch to a granular token or tokenless **trusted publishing** and delete it.
-- `GITHUB_TOKEN` — auto-provided by Actions; release-it uses it for the GH release.
+### Bootstrap + trusted-publishing setup (maintainer account actions)
+npm trusted publishing **cannot perform a package's first publish** — npmjs.com requires the
+package to exist before a trusted publisher can be configured for it (unlike PyPI; see
+npm/cli#8544). So:
+1. **One-time local bootstrap:** run release-it locally to publish `1.0.0-beta.0` using your
+   authenticated npm session (2FA OTP prompt). This creates the package. **No long-lived
+   token is created.**
+2. **Configure trusted publishing** in the now-existing package's settings on npmjs.com,
+   linking it to this repo's `release.yml` workflow.
+3. Every subsequent release runs through CI tokenless via OIDC.
+- `GITHUB_TOKEN` — auto-provided by Actions; release-it uses it for the GH release. **No
+  `NPM_TOKEN` secret is needed.**
+- Note (npm policy): trusted-publisher configs created after 2026-05-20 require explicitly
+  selecting at least one allowed action (select "publish").
 
 ### Caveats on record
 - release-it pushes the version-bump + `CHANGELOG.md` commit to `main`. If branch protection
@@ -180,9 +190,9 @@ Enter the **1.0.0 line via a prerelease**, not `0.1.0`.
 
 A short maintainer doc at the **repo root** — NOT a section on the public Starlight site
 (consumers don't release the package; it would be noise there). With release-it + the Action
-doing the work, it stays brief: which `workflow_dispatch` increment to pick for beta vs
-graduate, how the changelog + GH release are generated, the `NPM_TOKEN` secret prerequisite,
-and the dry-run-first tip.
+doing the work, it stays brief: the one-time local bootstrap publish + trusted-publishing
+setup, which `workflow_dispatch` increment to pick for beta vs graduate, how the changelog +
+GH release + provenance are generated, and the dry-run-first tip.
 
 ## 7. Verification spikes (do first within SP-B)
 
@@ -193,6 +203,11 @@ and the dry-run-first tip.
    `release-it major --preRelease=beta` actually produces `1.0.0-beta.0` (passing an explicit
    increment while the plugin also computes a bump is a known finicky corner). Validate with
    `--dry-run`.
+3. **release-it + OIDC trusted publishing** — confirm release-it's pre-publish auth check
+   doesn't trip without a token (it may need a config flag to skip the `npm whoami`-style
+   check when relying on OIDC). Validate the CI workflow with `dry_run: true` first. Note
+   provenance is automatic under trusted publishing (no `--provenance` needed), though a few
+   reports mention having to set it explicitly — confirm during the spike.
 
 ## 8. Out of scope (this spec)
 
@@ -202,5 +217,4 @@ and the dry-run-first tip.
   PR consuming `matrix-rain-webgpu@beta`, repointed to `1.0.0` after graduation.
 - **Device-loss recovery** — separate work (probe committed `b58ab1f`; fix after overnight
   confirmation of `reason: "unknown"`).
-- Tokenless npm trusted-publishing migration (post-first-publish follow-up).
 - The optional `matrix-rain` → `matrix-rain-webgpu` directory rename.
