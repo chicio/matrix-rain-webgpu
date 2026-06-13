@@ -37,6 +37,32 @@ export function useMatrixRainRenderer(args: UseMatrixRainRendererArgs): MatrixRa
   // a thrown renderer stays dead until the component remounts (page reload).
   const deadRef = useRef(false);
 
+  // Best-effort heal for the common background→foreground case: the browser can
+  // silently drop the canvas swap chain while the tab is hidden, leaving the loop
+  // running blind (frames advance, screen stays black). Re-configure on return to
+  // visible re-establishes it. This does NOT cover every wake path (e.g. deep
+  // OS-sleep that never fires visibilitychange) — that residual edge case is a
+  // known v1 limitation. Mirrors @typegpu/react's own configure, which otherwise
+  // only re-runs on root change.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') {
+        return;
+      }
+      const ctx = latestArgsRef.current.ctxRef.current;
+      if (!ctx) {
+        return;
+      }
+      ctx.configure({
+        device: root.device,
+        format: navigator.gpu.getPreferredCanvasFormat(),
+        alphaMode: 'premultiplied',
+      });
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [root]);
+
   // Bake the SDF atlas once on mount; cancelable in case the component unmounts mid-bake.
   useEffect(() => {
     let cancelled = false;

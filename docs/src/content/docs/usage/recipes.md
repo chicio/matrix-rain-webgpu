@@ -86,3 +86,7 @@ The component never throws into your tree; on a fatal renderer error it renders 
   }}
 />
 ```
+
+## Known limitations
+
+**Black canvas after long OS sleep.** When the machine sleeps for an extended period, the browser can silently drop the canvas's WebGPU swap chain while the render loop keeps running — frames advance but nothing paints. The component re-configures the context when the tab returns to `visible`, which heals the common background→foreground case (tab switch, short sleep). Some deep-sleep wakes never fire `visibilitychange`, so the canvas can stay black until the page is reloaded. If your app needs to be bulletproof against this, remount the component (e.g. via a `key` you bump) or reload on resume.
