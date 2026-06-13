@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: 'Which release to cut'
+        type: choice
+        options: [beta, major-beta, patch, minor, major]
+        default: beta
+      dry_run:
+        description: 'Dry run (no publish/tag/push)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # push the bump/changelog commit + tag, create the GH release
+  id-token: write # OIDC token for trusted publishing (+ automatic provenance)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so conventional-changelog can diff tags
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc # matches deploy.yml (Node 24)
+      - run: npm install -g npm@latest # trusted publishing needs npm >= 11.5.1
+      - run: npm ci
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Map increment to release-it args
+        id: args
+        run: |
+          case "${{ inputs.increment }}" in
+            beta)        echo "args=--preRelease=beta" >> "$GITHUB_OUTPUT" ;;
+            major-beta)  echo "args=major --preRelease=beta" >> "$GITHUB_OUTPUT" ;;
+            *)           echo "args=${{ inputs.increment }}" >> "$GITHUB_OUTPUT" ;;
+          esac
+      - name: Release
+        run: npx release-it ${{ steps.args.outputs.args }} ${{ inputs.dry_run && '--dry-run' || '' }} --ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No NPM_TOKEN — OIDC trusted publishing authenticates the publish.
