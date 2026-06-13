@@ -1,13 +1,44 @@
 {
   "name": "matrix-rain-webgpu",
   "version": "0.0.0",
-  "private": true,
+  "description": "WebGPU/TypeGPU Matrix-rain background effect for React.",
+  "keywords": [
+    "background-effect",
+    "matrix-rain",
+    "react",
+    "shader",
+    "typegpu",
+    "webgpu"
+  ],
+  "homepage": "https://chicio.github.io/matrix-rain-webgpu/",
+  "bugs": "https://github.com/chicio/matrix-rain-webgpu/issues",
+  "license": "MIT",
+  "author": "Fabrizio Duroni",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chicio/matrix-rain-webgpu.git"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "check": "oxlint && oxfmt --check",
     "fix": "oxlint --fix && oxfmt",
     "types": "tsc -b",
-    "build": "tsc -b"
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "release": "release-it"
   },
   "dependencies": {
     "@typegpu/noise": "^0.11.0",

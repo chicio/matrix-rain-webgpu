@@ -17,13 +17,7 @@ export default defineConfig({
       fileName: () => 'index.js',
     },
     rollupOptions: {
-      external: [
-        'react',
-        'react-dom',
-        'react/jsx-runtime',
-        /^@typegpu\//,
-        'typegpu',
-      ],
+      external: ['react', 'react-dom', 'react/jsx-runtime', /^@typegpu\//, 'typegpu'],
     },
   },
 });
