@@ -20,7 +20,7 @@ import { MatrixRainWebGPU } from 'matrix-rain-webgpu';
 
 The effect began its life as a 2D `<canvas>` implementation on [fabrizioduroni.it](https://www.fabrizioduroni.it). That version works, but every frame is CPU-driven pixel work: clearing, fading, and drawing each glyph.
 
-The push to rebuild it on the GPU came from [App.js Conf 2026](https://www.fabrizioduroni.it/blog/post/2026/06/01/app-js-conf-2026): I came back inspired by the talk on [TypeGPU](https://docs.swmansion.com/TypeGPU/) and decided to dust off my computer-graphics knowledge — with AI as a pair-programmer — and build something cool, the way I used to years ago when I was a computer-graphics enthusiast.
+The push to rebuild it on the GPU came from [App.js Conf 2026](https://www.fabrizioduroni.it/blog/post/2026/06/01/app-js-conf-2026): I came back inspired by the talk on [TypeGPU](https://docs.swmansion.com/TypeGPU/) and decided to dust off my computer-graphics knowledge, with AI as a pair-programmer, and build something cool, the way I used to years ago when I was a computer-graphics enthusiast. "Was" is underselling it: my thesis was [Spectral Clara Lux Tracer](https://github.com/chicio/Spectral-Clara-Lux-Tracer), a physically based ray/path tracer with spectral rendering and CRI light evaluation. Computer graphics is still the field I love the most, so this rewrite is less a new hobby than picking up a thread I never really put down.
 
 Moving it to the GPU also unlocks things the 2D version can't do well:
 
