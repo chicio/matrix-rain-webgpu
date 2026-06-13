@@ -40,14 +40,9 @@
     "prepublishOnly": "npm run build",
     "release": "release-it"
   },
-  "dependencies": {
+  "devDependencies": {
     "@typegpu/noise": "^0.11.0",
     "@typegpu/react": "^0.11.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "typegpu": "^0.11.6"
-  },
-  "devDependencies": {
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -56,9 +51,19 @@
     "eslint-plugin-typegpu": "^0.11.1",
     "oxfmt": "^0.49.0",
     "oxlint": "^1.64.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "typegpu": "^0.11.6",
     "typescript": "npm:tsover@6.0.1",
     "unplugin-typegpu": "^0.11.4",
     "vite": "^8.0.12"
+  },
+  "peerDependencies": {
+    "@typegpu/noise": "^0.11.0",
+    "@typegpu/react": "^0.11.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typegpu": "^0.11.0"
   },
   "overrides": {
     "typescript": "npm:tsover@6.0.1"
