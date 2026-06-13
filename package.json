@@ -1,25 +1,49 @@
 {
   "name": "matrix-rain-webgpu",
-  "version": "0.0.0",
-  "private": true,
+  "version": "1.0.0-beta.0",
+  "description": "WebGPU/TypeGPU Matrix-rain background effect for React.",
+  "keywords": [
+    "background-effect",
+    "matrix-rain",
+    "react",
+    "shader",
+    "typegpu",
+    "webgpu"
+  ],
+  "homepage": "https://chicio.github.io/matrix-rain-webgpu/",
+  "bugs": "https://github.com/chicio/matrix-rain-webgpu/issues",
+  "license": "MIT",
+  "author": "Fabrizio Duroni",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chicio/matrix-rain-webgpu.git"
+  },
+  "files": [
+    "dist"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "check": "oxlint && oxfmt --check",
     "fix": "oxlint --fix && oxfmt",
     "types": "tsc -b",
-    "build": "tsc -b"
-  },
-  "dependencies": {
-    "@typegpu/color": "^0.11.0",
-    "@typegpu/noise": "^0.11.0",
-    "@typegpu/radiance-cascades": "^0.11.0",
-    "@typegpu/react": "^0.11.0",
-    "@typegpu/sdf": "^0.11.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "typegpu": "^0.11.6"
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "release": "release-it"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^11.0.1",
+    "@typegpu/noise": "^0.11.0",
+    "@typegpu/react": "^0.11.0",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -28,9 +52,20 @@
     "eslint-plugin-typegpu": "^0.11.1",
     "oxfmt": "^0.49.0",
     "oxlint": "^1.64.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "release-it": "^20.2.0",
+    "typegpu": "^0.11.6",
     "typescript": "npm:tsover@6.0.1",
     "unplugin-typegpu": "^0.11.4",
     "vite": "^8.0.12"
+  },
+  "peerDependencies": {
+    "@typegpu/noise": "^0.11.0",
+    "@typegpu/react": "^0.11.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typegpu": "^0.11.0"
   },
   "overrides": {
     "typescript": "npm:tsover@6.0.1"

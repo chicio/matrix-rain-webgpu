@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://chicio.github.io/matrix-rain-webgpu/
+    about: Getting started, the public API, recipes, and how it works.
