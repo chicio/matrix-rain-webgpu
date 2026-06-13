@@ -41,6 +41,7 @@
     "release": "release-it"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^11.0.1",
     "@typegpu/noise": "^0.11.0",
     "@typegpu/react": "^0.11.0",
     "@types/node": "^24.12.3",
@@ -53,6 +54,7 @@
     "oxlint": "^1.64.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "release-it": "^20.2.0",
     "typegpu": "^0.11.6",
     "typescript": "npm:tsover@6.0.1",
     "unplugin-typegpu": "^0.11.4",
