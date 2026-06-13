@@ -1,5 +1,7 @@
 # matrix-rain-webgpu
 
+[![npm](https://img.shields.io/npm/v/matrix-rain-webgpu)](https://www.npmjs.com/package/matrix-rain-webgpu)
+[![CI](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/ci.yml/badge.svg)](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/ci.yml)
 [![Deploy](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/deploy.yml/badge.svg)](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/deploy.yml)
 
 > A Matrix-style "digital rain" background effect for React, rendered on the GPU with WebGPU via [TypeGPU](https://docs.swmansion.com/TypeGPU/). GPU-driven simulation, signed-distance-field glyphs, depth parallax, bloom, and a CRT post-process.
