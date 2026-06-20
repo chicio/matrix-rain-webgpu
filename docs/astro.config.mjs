@@ -43,12 +43,11 @@ export default defineConfig({
 			],
 			sidebar: [
 				// Persistent jump to the live demo — first thing in the sidebar on every page.
-				// Opens in a new tab (it's a standalone full-screen page, not a docs route).
+				// Navigates in the same tab so the playground's back button returns here.
 				{
 					label: 'Playground',
 					link: '/playground/',
 					badge: { text: 'live', variant: 'success' },
-					attrs: { target: '_blank', rel: 'noopener' },
 				},
 				{ label: 'Overview', items: [{ autogenerate: { directory: 'overview' } }] },
 				{ label: 'Usage', items: [{ autogenerate: { directory: 'usage' } }] },
