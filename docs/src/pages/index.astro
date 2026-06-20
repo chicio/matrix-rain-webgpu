@@ -84,6 +84,17 @@ const base = import.meta.env.BASE_URL;
       a.btn:hover {
         background: rgba(0, 255, 65, 0.15);
       }
+      @media (max-width: 480px) {
+        .cta {
+          flex-direction: column;
+          align-items: stretch;
+          width: 100%;
+          max-width: 18rem;
+        }
+        a.btn {
+          text-align: center;
+        }
+      }
     </style>
   </head>
   <body>
@@ -95,6 +106,14 @@ const base = import.meta.env.BASE_URL;
       <div class="cta">
         <a class="btn" href={`${base}overview/introduction/`}>Docs</a>
         <a class="btn" href={`${base}playground`} target="_blank" rel="noopener">Playground ▸</a>
+        <a
+          class="btn"
+          href="https://github.com/chicio/matrix-rain-webgpu"
+          target="_blank"
+          rel="noopener"
+        >
+          GitHub ▸
+        </a>
       </div>
       <p class="credit">
         by <a href="https://www.fabrizioduroni.it" target="_blank" rel="noopener">Fabrizio Duroni</a>
