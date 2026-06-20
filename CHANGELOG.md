@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1](https://github.com/chicio/matrix-rain-webgpu/compare/1.0.0...1.0.1) (2026-06-20)
+
+### Features
+
+* **docs:** :sparkles: add GitHub button to home hero, stack CTAs vertically on mobile ([2bbf558](https://github.com/chicio/matrix-rain-webgpu/commit/2bbf558637cedd685b0daba871e7914ee0473614))
+
 ## [1.0.0](https://github.com/chicio/matrix-rain-webgpu/compare/1.0.0-beta.1...1.0.0) (2026-06-13)
 
 ### Bug Fixes
