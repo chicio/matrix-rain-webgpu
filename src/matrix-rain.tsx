@@ -100,7 +100,7 @@ function resolveParallax(opt: ParallaxOptions | false | undefined): ParallaxConf
 export function MatrixRainWebGPU(props: MatrixRainProps) {
   const root = useRootWithStatus();
   const status = root.status;
-  const initError = status === 'rejected' ? root.error : undefined;
+  const initError = status === 'rejected' ? root.reason : undefined;
   const onError = props.onError;
 
   useEffect(() => {
@@ -116,8 +116,8 @@ export function MatrixRainWebGPU(props: MatrixRainProps) {
   }, [status, initError, onError]);
 
   // Pending (root still initializing) or rejected → render nothing. Only once the
-  // root is resolved do we mount the inner component, whose useRoot() is then safe.
-  if (status !== 'resolved') {
+  // root is fulfilled do we mount the inner component, whose useRoot() is then safe.
+  if (status !== 'fulfilled') {
     return null;
   }
   return <MatrixRainCanvas {...props} />;
