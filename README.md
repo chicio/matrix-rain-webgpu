@@ -13,13 +13,18 @@ It powers the animated background on [fabrizioduroni.it](https://www.fabriziodur
 ## Install
 
 ```sh
-npm install matrix-rain-webgpu react react-dom typegpu @typegpu/react @typegpu/noise
+npm install matrix-rain-webgpu react react-dom
 ```
 
-`react`/`react-dom` (v19) and `typegpu`/`@typegpu/react`/`@typegpu/noise` (v0.11) are
-peer dependencies — they must resolve to a single instance in your app, so you install
-them yourself. The shaders are pre-compiled at publish time, so you do **not** need any
-TypeGPU build plugin.
+`react`/`react-dom` (v19) are peer dependencies. The TypeGPU packages
+(`typegpu`/`@typegpu/react`/`@typegpu/noise`) are regular dependencies, exact-pinned to
+versions this library is tested against — you don't install or track them yourself. The
+shaders are pre-compiled at publish time, so you do **not** need any TypeGPU build plugin.
+
+> **Using TypeGPU directly in your app?** Align your `typegpu`/`@typegpu/*` versions with
+> the ones this package pins (see its `package.json`): npm then dedupes to a single
+> instance. Two different copies of `typegpu` or `@typegpu/react` in one bundle break the
+> `'use gpu'` shader registry and the shared root context.
 
 > **Module resolution:** the published types target bundler-style resolution
 > (`moduleResolution: "bundler"` / `"node"`), which is what Vite, Next.js, and most React

@@ -7,10 +7,14 @@ sidebar:
 ## Install
 
 ```sh
-npm install matrix-rain-webgpu react react-dom typegpu @typegpu/react @typegpu/noise
+npm install matrix-rain-webgpu react react-dom
 ```
 
 `react` and `react-dom` (v19) are peer dependencies — you'll already have them in a React app.
+The TypeGPU packages (`typegpu`, `@typegpu/react`, `@typegpu/noise`) come along as regular
+dependencies, exact-pinned to the versions this library is tested against. If your app uses
+TypeGPU directly too, align your versions with those pins so npm dedupes to a single instance —
+duplicate `typegpu` copies break the `'use gpu'` shader registry.
 
 ## Basic usage
 
