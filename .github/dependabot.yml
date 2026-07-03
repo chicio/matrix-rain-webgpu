@@ -1,0 +1,56 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(deps): :arrow_up:"
+    groups:
+      # typegpu packages are version-coupled — bump them together.
+      typegpu:
+        patterns:
+          - typegpu
+          - "@typegpu/*"
+          - unplugin-typegpu
+          - eslint-plugin-typegpu
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # Aliased to tsover and pinned via `overrides` — Dependabot would fight the pin.
+      - dependency-name: typescript
+
+  - package-ecosystem: npm
+    directory: /docs
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "chore(deps): :arrow_up:"
+    groups:
+      typegpu:
+        patterns:
+          - typegpu
+          - "@typegpu/*"
+          - unplugin-typegpu
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      - dependency-name: typescript
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "ci(deps): :arrow_up:"
