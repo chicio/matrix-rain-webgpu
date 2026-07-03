@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.0](https://github.com/chicio/matrix-rain-webgpu/compare/1.0.1...2.0.0) (2026-07-03)
+
+### Features
+
+* **deps:** :package: ship TypeGPU packages as exact-pinned dependencies ([#16](https://github.com/chicio/matrix-rain-webgpu/issues/16)) ([ccbd0f8](https://github.com/chicio/matrix-rain-webgpu/commit/ccbd0f8d73d1b525af05fe10541e409ce052cc0b))
+
+### Bug Fixes
+
+* **deps:** :arrow_up: update all dependencies, require @typegpu/react ^0.11.2 ([#15](https://github.com/chicio/matrix-rain-webgpu/issues/15)) ([d8ab1b6](https://github.com/chicio/matrix-rain-webgpu/commit/d8ab1b604a565a8fcf77880de9efbbcd4d25f8d0))
+
 ## [1.0.1](https://github.com/chicio/matrix-rain-webgpu/compare/1.0.0...1.0.1) (2026-06-20)
 
 ### Features
