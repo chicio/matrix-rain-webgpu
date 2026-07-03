@@ -74,9 +74,13 @@ Two entry points share the render path through `hooks/use-matrix-rain-renderer.t
 - **`docs/src/components/demo/`** — the internal playground demo (its own `useRoot()` + debug
   panel). Not shipped.
 
-`react`, `react-dom`, `typegpu`, `@typegpu/react`, `@typegpu/noise` are **peerDependencies** —
-they must resolve to a single instance in the consumer (duplicate `typegpu`/`react` instances
-break the `'use gpu'` registry / React hooks). Keep them peers.
+`react`/`react-dom` are **peerDependencies** — they must resolve to the consumer's single
+React instance. `typegpu`, `@typegpu/react`, `@typegpu/noise` are **regular dependencies,
+exact-pinned**: TypeGPU is 0.x and has shipped breaking API renames in patch releases
+(0.11.2 renamed `useRootWithStatus`'s statuses), so the library controls the exact versions
+it ships against; upgrades land deliberately via Dependabot's typegpu group + the verify
+suite. They are still **externalized** in the Vite build (never bundled) — a duplicate
+`typegpu`/`react` instance breaks the `'use gpu'` registry / React hooks.
 
 ## Code style (HARD)
 
