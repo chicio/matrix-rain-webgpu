@@ -13,7 +13,7 @@ import App from './App';
 // suspend — the same pattern the public MatrixRainWebGPU component uses.
 export default function PlaygroundApp() {
   const root = useRootWithStatus();
-  if (root.status !== 'resolved') {
+  if (root.status !== 'fulfilled') {
     return null;
   }
   return <App />;
