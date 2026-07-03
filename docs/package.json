@@ -16,7 +16,7 @@
     "@astrojs/starlight": "^0.40.0",
     "@mermaid-js/layout-elk": "^0.2.1",
     "@typegpu/noise": "^0.11.0",
-    "@typegpu/react": "^0.11.0",
+    "@typegpu/react": "^0.11.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "astro": "^6.4.5",
@@ -35,7 +35,7 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "typescript": "npm:tsover@6.0.1",
-    "unplugin-typegpu": "^0.11.4"
+    "unplugin-typegpu": "^0.11.6"
   },
   "overrides": {
     "typescript": "npm:tsover@6.0.1"
