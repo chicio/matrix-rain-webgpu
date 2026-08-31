@@ -25,6 +25,10 @@ export default defineConfig({
 		// Must come before Starlight so it processes the markdown first.
 		mermaid({ theme: 'dark' }),
 		starlight({
+			// This site is frozen: the project moved into the chicio-blog monorepo. Overriding Banner
+			// (rather than setting `banner` frontmatter on all 14 pages) means every page carries the
+			// notice, and a page added later cannot miss it.
+			components: { Banner: './src/components/MovedBanner.astro' },
 			title: 'matrix-rain-webgpu',
 			logo: { src: './src/assets/logo.png', alt: 'matrix-rain-webgpu' },
 			favicon: '/favicon.ico',
