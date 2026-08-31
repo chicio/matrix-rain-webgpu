@@ -1,0 +1,20 @@
+---
+/*
+ * Overrides Starlight's Banner, which by default renders only when a page sets `banner` in its
+ * frontmatter. This site is frozen, so the notice has to appear on every page — including any deep
+ * link someone already has — and an override cannot be forgotten on a page the way frontmatter can.
+ */
+const monorepo = 'https://github.com/chicio/chicio-blog';
+const docs = 'https://chicio.github.io/chicio-blog/matrix-rain/';
+---
+
+<div class="sl-banner moved-banner">
+  This documentation is no longer updated. <strong>matrix-rain-webgpu</strong> now lives in the
+  <a href={monorepo}>chicio-blog</a> monorepo — <a href={docs}>read the current docs</a>.
+</div>
+
+<style>
+  .moved-banner {
+    text-align: center;
+  }
+</style>

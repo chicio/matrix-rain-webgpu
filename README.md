@@ -1,5 +1,18 @@
 # matrix-rain-webgpu
 
+> [!IMPORTANT]
+> **This repository has moved and is archived.**
+>
+> `matrix-rain-webgpu` now lives in the [chicio-blog](https://github.com/chicio/chicio-blog)
+> monorepo, at [`packages/matrix-rain-webgpu`](https://github.com/chicio/chicio-blog/tree/main/packages/matrix-rain-webgpu).
+> Issues and pull requests belong [there](https://github.com/chicio/chicio-blog/issues).
+>
+> - **Current documentation:** https://chicio.github.io/chicio-blog/matrix-rain/
+> - **Package on npm:** https://www.npmjs.com/package/matrix-rain-webgpu — unchanged, `npm i matrix-rain-webgpu` still works, and releases continue from the monorepo
+>
+> This repository and its documentation site stay online so existing links keep working. Everything
+> below describes the project as of 2.0.0 and is no longer updated.
+
 [![npm](https://img.shields.io/npm/v/matrix-rain-webgpu)](https://www.npmjs.com/package/matrix-rain-webgpu)
 [![CI](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/ci.yml/badge.svg)](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/ci.yml)
 [![Deploy](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/deploy.yml/badge.svg)](https://github.com/chicio/matrix-rain-webgpu/actions/workflows/deploy.yml)
